@@ -1,4 +1,4 @@
-from sys import argv, stdout, stderr
+from sys import argv, stdout, stderr, platform
 from os import environ
 from pathlib import Path
 from time import sleep
@@ -78,8 +78,10 @@ def run_express_server(node_env: str = "development"):
 
 
 def run_nginx():
-    all_wait(general_popen("nginx", "-s", "stop"))
-    return general_popen("nginx", "-p", ".", "-c", "./conf/nginx.conf", cwd=ROOT / "nginx")
+    NGINX = "/usr/sbin/nginx" if platform == 'linux' else which("nginx")
+    all_wait(general_popen(NGINX, "-s", "stop", cwd=ROOT / "nginx"))
+    return all_wait(general_popen(NGINX, "-p", ".", "-c", "./conf/nginx.conf", cwd=ROOT / "nginx"))
+
 
 
 def main():
