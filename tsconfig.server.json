@@ -1,0 +1,19 @@
+{
+  "include": [
+    "main.mts",
+    "services/*.mts",
+    "routes/*.mts",
+    "types/*.ts",
+  ],
+  "compilerOptions": {
+    // "composite": true,
+    "noEmit": false,
+    "module": "NodeNext",
+    "target": "ESNext",
+    "outDir": "./dist-server",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+  }
+}
