@@ -1,6 +1,6 @@
 import { DBService } from "./database.mjs";
-import logger from './logger.mjs'
-import { HTTPStatusCode } from '@ts-rest/core'
+import logger from './logger.mjs';
+import { HTTPStatusCode } from '@ts-rest/core';
 
 class RouteError<ErrorCode extends HTTPStatusCode> extends Error {
     public status: ErrorCode;
@@ -34,6 +34,14 @@ export default abstract class RouteBase<T, ErrorCode extends HTTPStatusCode> {
 
     protected error(message: string, code: ErrorCode) {
         return new RouteError(message, code);
+    }
+
+    protected auth(authorization: string) {
+        if (!authorization.startsWith('Bearer ')) {
+            throw new Error('Authorization header must start with "Bearer "');
+        }
+        const token = authorization.slice("Bearer ".length);
+        return this.db.authWithToken(token);
     }
 
     protected abstract handle(): Promise<Success<T> | RouteError<ErrorCode>>;

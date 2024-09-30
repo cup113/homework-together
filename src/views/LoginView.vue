@@ -1,13 +1,17 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
+import router from '@/router/index';
 
 const userStore = useUserStore();
 const username = ref(userStore.user.username);
 const password = ref('');
 
-function login() {
-    userStore.login(username.value, password.value);
+async function login() {
+    const success = await userStore.login(username.value, password.value);
+    if (success) {
+        router.push('/');
+    }
 }
 </script>
 

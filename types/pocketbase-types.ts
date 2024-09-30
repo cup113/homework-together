@@ -68,6 +68,7 @@ export type UserItemsRecord = {
 	note?: HTMLString
 	progress?: number
 	publicItem: RecordIdString
+	user: RecordIdString
 }
 
 export type UsersRecord = {

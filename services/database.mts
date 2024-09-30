@@ -1,5 +1,5 @@
 import Client from 'pocketbase';
-import type { TypedPocketBase } from '../types/pocketbase-types.js';
+import type { TypedPocketBase, UserItemsResponse, PublicItemsRecord } from '../types/pocketbase-types.js';
 
 export class DBService {
     protected pb: TypedPocketBase;
@@ -21,8 +21,30 @@ export class DBService {
     }
 
     public async getUserItems() {
-        return await this.pb.collection('userItems').getFullList({
+        const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsRecord }>>({
             requestKey: this.pb.authStore.token,
+            expand: "publicItem",
         }); // TODO: add pagination
+        return Promise.all(items.map(async item => {
+            const { expand, ...rest } = item;
+            if (!expand) {
+                throw new Error("Item is missing publicItem expand");
+            }
+            const publicItem = expand.publicItem;
+            const { subject, ...restPublic } = publicItem;
+            return {
+                ...rest,
+                public: {
+                    subject: await this.getSubject(subject),
+                   ...restPublic,
+                },
+            }
+        }));
+    }
+
+    public async getSubject(id: string) {
+        return await this.pb.collection('subjects').getOne(id, {
+            requestKey: null,
+        });
     }
 }

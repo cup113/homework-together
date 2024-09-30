@@ -10,6 +10,7 @@ import ViteExpress from "vite-express";
 import contract from './types/contract.js';
 import loggerService from './services/logger.mjs'
 import LoginRoute from './routes/login.mjs';
+import { GetItemRoute } from './routes/items.mjs'
 
 var app: Express = express();
 
@@ -25,6 +26,11 @@ const router = server.router(contract, {
     auth: {
         login({ body: { username, password } }) {
             return new LoginRoute(username, password).getResponse();
+        }
+    },
+    items: {
+        list({ headers: { authorization } }) {
+            return new GetItemRoute(authorization).getResponse();
         }
     }
 });
