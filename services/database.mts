@@ -1,5 +1,5 @@
 import Client from 'pocketbase';
-import type { TypedPocketBase, UserItemsResponse, PublicItemsRecord } from '../types/pocketbase-types.js';
+import type { TypedPocketBase, UserItemsResponse, PublicItemsRecord, UserItemsRecord } from '../types/pocketbase-types.js';
 
 export class DBService {
     protected pb: TypedPocketBase;
@@ -18,6 +18,15 @@ export class DBService {
         const auth = await this.pb.collection('users').authWithPassword(username, password);
         await this.pb.collection('users').authRefresh();
         return auth;
+    }
+
+    public async register(username: string, password: string) {
+        return await this.pb.collection('users').create({
+            username,
+            password,
+            passwordConfirm: password,
+            name: username,
+        });
     }
 
     public async getUserItems() {
@@ -40,6 +49,23 @@ export class DBService {
                 },
             }
         }));
+    }
+
+    public async createItem(userId: string, publicItem: PublicItemsRecord, userItem: Omit<UserItemsRecord, 'user' | 'publicItem'>) {
+        const publicResult = await this.pb.collection('publicItems').create(publicItem, {
+            requestKey: this.pb.authStore.token,
+        });
+        const userResult = await this.pb.collection('userItems').create({
+            ...userItem,
+            id: publicResult.id,
+            user: userId,
+        }, {
+            requestKey: this.pb.authStore.token + publicItem.description,
+        });
+        return {
+            public: publicResult,
+            user: userResult,
+        };
     }
 
     public async updateItem(id: string, data: Partial<UserItemsResponse>) {

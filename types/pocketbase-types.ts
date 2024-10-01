@@ -76,7 +76,7 @@ export type UsersRecord = {
 	goal?: IsoDateString
 	items?: RecordIdString[]
 	name?: string
-	organization: RecordIdString
+	organizations?: RecordIdString[]
 }
 
 // Response types include system fields and match responses from the PocketBase API
