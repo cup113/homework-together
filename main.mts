@@ -10,9 +10,10 @@ import ViteExpress from "vite-express";
 import contract from './types/contract.js';
 import loggerService from './services/logger.mjs'
 import LoginRoute from './routes/login.mjs';
-import { GetItemRoute } from './routes/items.mjs'
+import { GetItemRoute, UpdateUserItemRoute } from './routes/items.mjs'
+import { ListSubjectsRoute } from './routes/subjects.mjs';
 
-var app: Express = express();
+const app: Express = express();
 
 app.use(logger('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -31,6 +32,14 @@ const router = server.router(contract, {
     items: {
         list({ headers: { authorization } }) {
             return new GetItemRoute(authorization).getResponse();
+        },
+        update({ headers: { authorization }, body: { id, progress } }) {
+            return new UpdateUserItemRoute(authorization, id, { progress }).getResponse();
+        }
+    },
+    subjects: {
+        list() {
+            return new ListSubjectsRoute().getResponse();
         }
     }
 });

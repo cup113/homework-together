@@ -1,5 +1,7 @@
 import { DBService } from "./database.mjs";
 import logger from './logger.mjs';
+import { ClientResponseError, type RecordAuthResponse } from 'pocketbase'
+import type { UsersResponse } from '../types/pocketbase-types.js';
 import { HTTPStatusCode } from '@ts-rest/core';
 
 class RouteError<ErrorCode extends HTTPStatusCode> extends Error {
@@ -36,12 +38,30 @@ export default abstract class RouteBase<T, ErrorCode extends HTTPStatusCode> {
         return new RouteError(message, code);
     }
 
-    protected auth(authorization: string) {
+    protected includeCode<T extends number>(codes: T[], code: number): code is T {
+        return (codes as number[]).includes(code);
+    }
+
+    protected convertError<ErrorStatusCode extends ErrorCode>(error: unknown, codes: ErrorStatusCode[]): RouteError<ErrorCode> {
+        if (error instanceof ClientResponseError && this.includeCode(codes, error.status)) {
+            return this.error(error.message, error.status);
+        } else if (error instanceof Error) {
+            throw error;
+        }else {
+            throw new Error(new String(error).valueOf());
+        }
+    }
+
+    protected async auth(authorization: string): Promise<RecordAuthResponse<UsersResponse> | RouteError<401>> {
         if (!authorization.startsWith('Bearer ')) {
-            throw new Error('Authorization header must start with "Bearer "');
+            return new RouteError("Invalid authorization header", 401)
         }
         const token = authorization.slice("Bearer ".length);
-        return this.db.authWithToken(token);
+        try {
+            return this.db.authWithToken(token);
+        } catch {
+            return new RouteError("Invalid token", 401)
+        }
     }
 
     protected abstract handle(): Promise<Success<T> | RouteError<ErrorCode>>;

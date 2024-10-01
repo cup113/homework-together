@@ -42,6 +42,18 @@ export class DBService {
         }));
     }
 
+    public async updateItem(id: string, data: Partial<UserItemsResponse>) {
+        return await this.pb.collection('userItems').update(id, data, {
+            requestKey: this.pb.authStore.token + "#" + id,
+        });
+    }
+
+    public async listSubjects() {
+        return await this.pb.collection('subjects').getFullList({
+            requestKey: null,
+        });
+    }
+
     public async getSubject(id: string) {
         return await this.pb.collection('subjects').getOne(id, {
             requestKey: null,
