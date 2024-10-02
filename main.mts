@@ -9,9 +9,10 @@ import ViteExpress from "vite-express";
 
 import contract from './types/contract.js';
 import loggerService from './services/logger.mjs'
-import LoginRoute from './routes/login.mjs';
-import { GetItemRoute, UpdateUserItemRoute } from './routes/items.mjs'
+import { LoginRoute, RegisterRoute } from './routes/auth.mjs';
+import { CreateItemRoute, GetItemRoute, UpdateUserItemRoute } from './routes/items.mjs'
 import { ListSubjectsRoute } from './routes/subjects.mjs';
+import { ListOrganizationsRoute, EnterOrganizationRoute } from './routes/organizations.mjs'
 
 const app: Express = express();
 
@@ -27,6 +28,9 @@ const router = server.router(contract, {
     auth: {
         login({ body: { username, password } }) {
             return new LoginRoute(username, password).getResponse();
+        },
+        register({ body: { username, password } }) {
+            return new RegisterRoute(username, password).getResponse();
         }
     },
     items: {
@@ -35,11 +39,22 @@ const router = server.router(contract, {
         },
         update({ headers: { authorization }, body: { id, progress } }) {
             return new UpdateUserItemRoute(authorization, id, { progress }).getResponse();
+        },
+        create({ headers: { authorization }, body: { publicItem, userItem } }) {
+            return new CreateItemRoute(authorization, publicItem, userItem).getResponse();
         }
     },
     subjects: {
         list() {
             return new ListSubjectsRoute().getResponse();
+        }
+    },
+    organizations: {
+        list() {
+            return new ListOrganizationsRoute().getResponse();
+        },
+        join({ headers: { authorization }, body: { organizationId } }) {
+            return new EnterOrganizationRoute(authorization, organizationId).getResponse();
         }
     }
 });

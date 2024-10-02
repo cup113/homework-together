@@ -54,6 +54,7 @@ export type PublicItemsRecord = {
 	deadline?: IsoDateString
 	description: HTMLString
 	estimateMinutes: number
+	organization?: RecordIdString
 	range: PublicItemsRangeOptions
 	subject: RecordIdString
 }
@@ -74,7 +75,6 @@ export type UserItemsRecord = {
 export type UsersRecord = {
 	avatar?: string
 	goal?: IsoDateString
-	items?: RecordIdString[]
 	name?: string
 	organizations?: RecordIdString[]
 }

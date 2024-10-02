@@ -1,8 +1,9 @@
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { defineStore } from 'pinia'
 import { useLocalStorage } from '@vueuse/core'
 import { useNetworkStore } from './network';
 import { Sha256 } from '@aws-crypto/sha256-js';
+import type { OrganizationsResponse } from 'types/pocketbase-types';
 
 export const useUserStore = defineStore('user', () => {
   const token = useLocalStorage('HT_token', '');
@@ -10,7 +11,9 @@ export const useUserStore = defineStore('user', () => {
   const user = useLocalStorage('HT_user', {
     id: '',
     username: '',
+    organizations: new Array<{ name: string, id: string }>(),
   });
+  const organizations = ref(new Array<OrganizationsResponse>())
 
   function sha256(str: string): string {
     const hash = new Sha256();
@@ -43,10 +46,57 @@ export const useUserStore = defineStore('user', () => {
     }
   };
 
+  async function register(username: string, password: string) {
+    const network = useNetworkStore();
+    const response = await network.client.auth.register.mutation({
+      body: {
+        username,
+        password: sha256(password),
+      },
+    });
+    if (response.status === 200) {
+      return await login(username, password);
+    } else {
+      alert('Registration failed.'); // TODO: handle error
+      return false;
+    }
+  }
+
+  async function list_organizations() {
+    const network = useNetworkStore();
+    const response = await network.client.organizations.list.query({});
+    if (response.status === 200) {
+      organizations.value = response.body;
+    } else {
+      console.error(response.body);
+      alert('Failed to list organizations.'); // TODO: handle error
+    }
+  }
+
+  async function join_organization(organizationId: string) {
+    const network = useNetworkStore();
+    const response = await network.client.organizations.join.mutation({
+      body: { organizationId }
+    });
+    if (response.status === 200) {
+      user.value.organizations.push({ name: response.body.name, id: organizationId });
+      return true;
+    } else {
+      console.error(response.body);
+      alert('Failed to join organization.'); // TODO: handle error
+      return false;
+    }
+  }
+
+  list_organizations();
+
   return {
     isLoggedIn,
     token,
     user,
+    organizations,
     login,
+    register,
+    join_organization,
   }
 });

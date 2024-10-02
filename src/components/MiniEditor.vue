@@ -22,6 +22,6 @@ const editor = useEditor({
 <template>
     <div class="border-2 border-black rounded-lg">
         <div class="bg-gray-200 rounded-t-lg px-2 py-1"><slot></slot></div>
-        <EditorContent :editor="editor" class="py-1 px-2 [&_.ProseMirror]:outline-0"></EditorContent>
+        <EditorContent :editor="editor" class="py-1 px-2 [&_.ProseMirror]:outline-0 min-w-40"></EditorContent>
     </div>
 </template>

@@ -3,57 +3,51 @@ import { useItemsStore } from '@/stores/items';
 import { useShareStore } from '@/stores/share';
 
 import LeaderBoardItem from '@/components/LeaderBoardItem.vue';
-import { Icon } from '@iconify/vue';
 import ItemDisplay from '@/components/ItemDisplay.vue';
 import ItemAdd from '@/components/ItemAdd.vue';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCaption } from '@/components/ui/table';
+import TableCell from '@/components/ui/table/TableCell.vue';
 
 const itemsStore = useItemsStore();
 const shareStore = useShareStore();
 </script>
 
 <template>
-  <main class="py-4 px-12">
+  <main class="py-4 px-12 gap-4">
     <h1 class="text-3xl font-bold">Homework Together</h1>
     <div class="flex">
-      <div class="grow">
+      <div class="flex flex-col grow gap-4">
         <section>
-          <h2 class="text-2xl font-bold">个人进度</h2>
+          <Table>
+            <TableCaption>个人进度</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>学科</TableHead>
+                <TableHead>完成度</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="[id, subject] in itemsStore.subjectsSummary" :key="id">
+                <TableCell>{{ subject.name }}</TableCell>
+                <TableCell>
+                  <meter :value="subject.done" :max="subject.total"></meter>
+                  <span>{{ subject.done }} / {{ subject.total }}</span>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>总计</TableCell>
+                <TableCell>
+                  <meter :value="itemsStore.summary.done" :max="itemsStore.summary.total"></meter>
+                  <span>{{ itemsStore.summary.done }} / {{ itemsStore.summary.total }}</span>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </section>
         <section>
           <div>
-            <Table>
-              <TableCaption>作业列表</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <Icon icon="ph:exam"></Icon>学科
-                  </TableHead>
-                  <TableHead>
-                    <Icon icon="material-symbols-light:text-ad-rounded"></Icon>内容
-                  </TableHead>
-                  <TableHead>
-                    <Icon icon="carbon:progress-bar"></Icon>进度
-                  </TableHead>
-                  <TableHead>
-                    <Icon icon="tabler:tag-filled"></Icon>性质
-                  </TableHead>
-                  <TableHead>
-                    <Icon icon="hugeicons:estimate-02"></Icon>预计时间
-                  </TableHead>
-                  <TableHead>
-                    <Icon icon="icon-park:deadline-sort"></Icon>截止时间
-                  </TableHead>
-                  <TableHead>
-                    <Icon icon="ep:operation"></Icon>操作
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <ItemDisplay v-for="item in itemsStore.items" :key="item.id" :item="item"></ItemDisplay>
-                <ItemAdd></ItemAdd>
-              </TableBody>
-            </Table>
+            <ItemDisplay v-for="item in itemsStore.items" :key="item.id" :item="item"></ItemDisplay>
+            <ItemAdd></ItemAdd>
           </div>
         </section>
       </div>

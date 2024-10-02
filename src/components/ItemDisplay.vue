@@ -6,9 +6,10 @@ import { useDebounce, useVModel } from '@vueuse/core';
 import { useItemsStore } from '@/stores/items';
 
 import MiniEditor from '@/components/MiniEditor.vue';
+import { Icon } from '@iconify/vue';
 import { Slider } from '@/components/ui/slider';
-import { TableRow, TableCell } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge'
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 const props = defineProps<{
@@ -20,6 +21,11 @@ const deadline = computed(() => dayjs(props.item.public.deadline).format("MM/DD 
 const progress = ref([props.item.progress * 100]);
 const debouncedProgress = useDebounce(progress, 500);
 const description = ref(props.item.public.description);
+const range = computed(() => ({
+    all: '全体',
+    some: '部分',
+    private: '个人',
+}[item.value.public.range]))
 
 function toHumanTime(minutes: number) {
     const h = Math.floor(minutes / 60);
@@ -41,20 +47,37 @@ watch(debouncedProgress, value => {
 });
 
 const SHORTCUT_PROGRESSES = [0, 50, 100];
-
 </script>
 
 <template>
-    <TableRow>
-        <TableCell>{{ item.public.subject.abbr }}</TableCell>
-        <TableCell>
-            <div class="flex flex-col gap-1">
+    <Card>
+        <CardHeader>
+            <div class="flex flex-row gap-1 items-center">
                 <MiniEditor v-model="description">公开内容/描述</MiniEditor>
                 <MiniEditor v-model="item.note">备注</MiniEditor>
+                <Badge>
+                    <Icon icon="tabler:tag-filled"></Icon> {{ range }}
+                </Badge>
             </div>
-        </TableCell>
-        <TableCell>
-            <div class="flex flex-col gap-3">
+        </CardHeader>
+        <CardContent>
+            <div class="flex items-center gap-2">
+                <Badge class="flex flex-row gap-1">
+                    <Icon icon="ph:exam"></Icon>
+                    <div>{{ item.public.subject.abbr }}</div>
+                    <div>{{ item.public.subject.name }}</div>
+                </Badge>
+                <Badge class="flex gap-1">
+                    <Icon icon="hugeicons:estimate-02"></Icon>
+                    <div>{{ toHumanTime(item.estimateMinutes) }}</div>
+                    <div><del>{{ toHumanTime(item.public.estimateMinutes) }}</del></div>
+                </Badge>
+                <Badge class="flex gap-1">
+                    <Icon icon="icon-park:deadline-sort"></Icon>
+                    <div>{{ deadline }}</div>
+                </Badge>
+            </div>
+            <div class="flex flex-row gap-3 mt-4">
                 <Slider v-model="progress" :min="0" :max="100" :step="1"></Slider>
                 <div class="flex gap-1">
                     <Button v-for="progress in SHORTCUT_PROGRESSES" :key="progress" @click="updateProgress(progress)"
@@ -62,15 +85,9 @@ const SHORTCUT_PROGRESSES = [0, 50, 100];
                             progress }}%</Button>
                 </div>
             </div>
-        </TableCell>
-        <TableCell>
-            <Badge>{{ item.public.range }}</Badge>
-        </TableCell>
-        <TableCell>
-            <div>{{ toHumanTime(item.estimateMinutes) }}</div>
-            <div><del>{{ toHumanTime(item.public.estimateMinutes) }}</del></div>
-        </TableCell>
-        <TableCell>{{ deadline }}</TableCell>
-        <TableCell><Button variant="destructive">删除</Button></TableCell>
-    </TableRow>
+        </CardContent>
+        <CardFooter>
+            <Button variant="destructive">删除</Button>
+        </CardFooter>
+    </Card>
 </template>

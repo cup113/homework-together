@@ -3,8 +3,9 @@ import { ref } from 'vue';
 import dayjs from 'dayjs';
 import { useItemsStore } from '@/stores/items';
 
+import { PublicItemsRangeOptions } from '@/../types/pocketbase-types';
 import MiniEditor from './MiniEditor.vue';
-import { TableRow, TableCell } from '@/components/ui/table';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectGroup, SelectContent, SelectItem } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,56 +15,88 @@ const itemsStore = useItemsStore();
 
 const subject = ref(undefined as string | undefined);
 const description = ref('<p></p>');
-const notes = ref('<p></p>');
-const range = ref('all');
+const note = ref('<p></p>');
+const range = ref(PublicItemsRangeOptions.all);
 const progress = ref([0]);
 const publicMinutes = ref(0);
 const userMinutes = ref(0);
 const deadline = ref(dayjs().format("YYYY-MM-DD" + "T" + "HH:mm"));
+
+function addItem() {
+    if (!subject.value) {
+        alert('请选择学科');
+        return;
+    }
+    if (!description.value.trim()) {
+        alert('请填写公开内容/描述');
+        return;
+    }
+    if (publicMinutes.value === 0) {
+        alert('请设置时间');
+        return;
+    }
+    itemsStore.addItem({
+        subject: subject.value,
+        description: description.value,
+        range: range.value,
+        estimateMinutes: publicMinutes.value,
+        deadline: dayjs(deadline.value).toISOString(),
+    }, {
+        note: note.value,
+        progress: progress.value[0],
+        estimateMinutes: userMinutes.value,
+    });
+}
 </script>
 
 <template>
-    <TableRow>
-        <TableCell>
-            <Select v-model="subject">
-                <SelectTrigger>
-                    <SelectValue placeholder="学科..."></SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectGroup>
-                        <SelectItem v-for="subject in itemsStore.subjects" :value="subject.name" :key="subject.abbr">{{ subject.name }}</SelectItem>
-                    </SelectGroup>
-                </SelectContent>
-            </Select>
-        </TableCell>
-        <TableCell class="flex flex-col gap-1">
-            <MiniEditor v-model="description">公开内容/描述</MiniEditor>
-            <MiniEditor v-model="notes">个人备注</MiniEditor>
-        </TableCell>
-        <TableCell><Slider v-model="progress" :min="0" :max="100" :step="1"></Slider></TableCell>
-        <TableCell>
-            <Select v-model="range">
-                <SelectTrigger>
-                    <SelectValue placeholder="Range..."></SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectGroup>
-                        <SelectItem value="all">全体</SelectItem>
-                        <SelectItem value="some">部分</SelectItem>
-                        <SelectItem value="private">个人</SelectItem>
-                    </SelectGroup>
-                </SelectContent>
-            </Select>
-        </TableCell>
-        <TableCell>
-            <div class="flex items-center"><span class="w-12">公开</span><Input class="px-2 w-20" type="number" min="0" step="1" v-model="publicMinutes" /></div>
-            <div class="flex items-center"><span class="w-12">个人</span><Input class="px-2 w-20" type="number" min="0" step="1" v-model="userMinutes" /></div>
-        </TableCell>
-        <TableCell>
-            <Input type="datetime-local" v-model="deadline" />
-        </TableCell>
-        <TableCell>
-            <Button>提交</Button>
-        </TableCell>
-    </TableRow>
+    <Card>
+        <CardHeader>
+            <div class="flex gap-2 items-center">
+                <Select v-model="subject">
+                    <SelectTrigger>
+                        <SelectValue placeholder="学科..."></SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectItem v-for="subject in itemsStore.subjects" :value="subject.id"
+                                :key="subject.abbr">{{
+                                    subject.name }}</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+                <MiniEditor v-model="description">公开内容/描述</MiniEditor>
+                <MiniEditor v-model="note">个人备注</MiniEditor>
+                <Select v-model="range">
+                    <SelectTrigger>
+                        <SelectValue placeholder="Range..."></SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectItem :value="PublicItemsRangeOptions.all">全体</SelectItem>
+                            <SelectItem :value="PublicItemsRangeOptions.some">部分</SelectItem>
+                            <SelectItem :value="PublicItemsRangeOptions.private">个人</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </div>
+        </CardHeader>
+        <CardContent>
+            <div class="flex flex-col gap-4">
+                <div class="flex gap-2">
+                    <div class="flex items-center"><span class="w-12">公开</span><Input class="px-2 w-20" type="number"
+                            min="0" step="1" v-model="publicMinutes" /></div>
+                    <div class="flex items-center"><span class="w-12">个人</span><Input class="px-2 w-20" type="number"
+                            min="0" step="1" v-model="userMinutes" /></div>
+                    <Input type="datetime-local" v-model="deadline" />
+                </div>
+                <div>
+                    <Slider v-model="progress" :min="0" :max="100" :step="1"></Slider>
+                </div>
+            </div>
+        </CardContent>
+        <CardFooter>
+            <Button @click="addItem()">添加</Button>
+        </CardFooter>
+    </Card>
 </template>

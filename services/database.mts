@@ -1,5 +1,6 @@
 import Client from 'pocketbase';
-import type { TypedPocketBase, UserItemsResponse, PublicItemsRecord, UserItemsRecord } from '../types/pocketbase-types.js';
+import type { TypedPocketBase, UserItemsResponse, PublicItemsRecord, OrganizationsResponse } from '../types/pocketbase-types.js';
+import type { Item, RawPublicItem, RawUserItem, RawOrganization } from '../types/contract.js';
 
 export class DBService {
     protected pb: TypedPocketBase;
@@ -29,6 +30,24 @@ export class DBService {
         });
     }
 
+    public async listOrganizations(): Promise<OrganizationsResponse[]> {
+        return await this.pb.collection('organizations').getFullList();
+    }
+
+    public async enterOrganization(userId: string, organizationId: string) {
+        await this.pb.collection('users').update(userId, {
+            "organizations+": organizationId,
+        });
+        return await this.pb.collection('organizations').getOne(organizationId);
+    }
+
+    public async createOrganization(userId: string, organizationData: RawOrganization): Promise<OrganizationsResponse> {
+        return await this.pb.collection('organizations').create({
+            ...organizationData,
+            leader: userId,
+        });
+    }
+
     public async getUserItems() {
         const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsRecord }>>({
             requestKey: this.pb.authStore.token,
@@ -51,20 +70,27 @@ export class DBService {
         }));
     }
 
-    public async createItem(userId: string, publicItem: PublicItemsRecord, userItem: Omit<UserItemsRecord, 'user' | 'publicItem'>) {
-        const publicResult = await this.pb.collection('publicItems').create(publicItem, {
+    public async createItem(userId: string, publicItem: RawPublicItem, userItem: RawUserItem): Promise<Item> {
+        const publicResult = await this.pb.collection('publicItems').create({
+            ...publicItem,
+            author: userId,
+        }, {
             requestKey: this.pb.authStore.token,
         });
         const userResult = await this.pb.collection('userItems').create({
             ...userItem,
-            id: publicResult.id,
+            publicItem: publicResult.id,
             user: userId,
         }, {
             requestKey: this.pb.authStore.token + publicItem.description,
         });
+        const { subject, ...restPublic } = publicResult;
         return {
-            public: publicResult,
-            user: userResult,
+            ...userResult,
+            public: {
+                ...restPublic,
+                subject: await this.getSubject(subject),
+            }
         };
     }
 

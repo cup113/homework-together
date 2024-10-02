@@ -7,23 +7,32 @@ Do homework together with your friends!
 ### Phase 1: Demo
 
 - [x] Add progress update
-- [ ] Add homework creation
-- [ ] Use SHA256 for password hashing
-- [ ] Add progress display (Refactor slide)
+- [x] Turn to Card layout
+- [x] Add homework creation
+- [x] Use SHA256 for password hashing
+- [x] Add user registration
+- [x] Add Personal Summary
 - [ ] Add Leaderboard
-- [ ] Turn to Card layout
 
 ### Phase 2: Polish Details
 
+- [ ] Delete & Update Item
+- [ ] Add progress display (Refactor slide)
+- [ ] Add organization creation & entry
+- [ ] Attach item to organization
 - [ ] Refactor: Edit Mode
-- [ ] Add user registration
+- [ ] Import from organization's public list
 - [ ] Add organization registration
 - [ ] Add pagination in homework list
 - [ ] Add loading animation
 - [ ] Add Subject belonging to organization
 - [ ] Handle Errors
 - [ ] Add leaderboard pagination
+- [ ] Add organization pagination
+- [ ] Add organization entry verification
 
 ### Phase 3: Features
 
 - [ ] Add Goal system
+- [ ] Add Organization management
+- [ ] Add Comment & Request system
