@@ -8,86 +8,94 @@ import { useItemsStore } from '@/stores/items';
 import MiniEditor from '@/components/MiniEditor.vue';
 import { Icon } from '@iconify/vue';
 import { Slider } from '@/components/ui/slider';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from './ui/dropdown-menu';
 
 const props = defineProps<{
     item: Item;
 }>();
 
+const itemsStore = useItemsStore();
 const item = useVModel(props, 'item');
 const deadline = computed(() => dayjs(props.item.public.deadline).format("MM/DD HH:mm"));
 const progress = ref([props.item.progress * 100]);
 const debouncedProgress = useDebounce(progress, 500);
 const description = ref(props.item.public.description);
+const doneMinutes = computed(() => progress.value[0] * props.item.estimateMinutes / 100);
 const range = computed(() => ({
     all: '全体',
     some: '部分',
     private: '个人',
-}[item.value.public.range]))
-
-function toHumanTime(minutes: number) {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    if (h > 0) {
-        return `${h}h ${m}m`;
-    } else {
-        return `${m}min`;
-    }
-}
+}[item.value.public.range]));
 
 function updateProgress(value: number) {
     progress.value = [value];
 }
 
 watch(debouncedProgress, value => {
-    const itemsStore = useItemsStore();
     itemsStore.updateProgress(props.item, value[0] / 100);
 });
 
-const SHORTCUT_PROGRESSES = [0, 50, 100];
+const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
 </script>
 
 <template>
-    <Card>
-        <CardHeader>
-            <div class="flex flex-row gap-1 items-center">
-                <MiniEditor v-model="description">公开内容/描述</MiniEditor>
-                <MiniEditor v-model="item.note">备注</MiniEditor>
-                <Badge>
-                    <Icon icon="tabler:tag-filled"></Icon> {{ range }}
-                </Badge>
+    <div class="rounded-lg hover:bg-slate-50 px-2">
+        <div class="flex flex-row gap-1 items-center">
+            <DropdownMenu>
+                <DropdownMenuTrigger>
+                    <Button variant="ghost" class="p-1">
+                        <Icon icon="weui:more-filled" class="w-6 h-6" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent class="flex flex-col">
+                    <DropdownMenuItem v-for="progress in SHORTCUT_PROGRESSES" :key="progress"
+                        @click="updateProgress(progress)">
+                        <DropdownMenuLabel class="flex gap-1 items-center">
+                            <Icon icon="pajamas:progress" />
+                            {{ progress }}%
+                        </DropdownMenuLabel>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1">
+                            <Icon icon="material-symbols:delete-outline" />删除 <!-- TODO: Confirmation -->
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <div class="w-24 flex flex-col gap-1">
+                <div>
+                    <Slider v-model="progress" :min="0" :max="100" :step="1"></Slider>
+                </div>
+                <div class="text-sm text-slate-700 text-center">{{ progress[0] }}% ({{
+                    itemsStore.toHumanTime(doneMinutes) }})</div>
             </div>
-        </CardHeader>
-        <CardContent>
-            <div class="flex items-center gap-2">
-                <Badge class="flex flex-row gap-1">
-                    <Icon icon="ph:exam"></Icon>
-                    <div>{{ item.public.subject.abbr }}</div>
-                    <div>{{ item.public.subject.name }}</div>
-                </Badge>
-                <Badge class="flex gap-1">
-                    <Icon icon="hugeicons:estimate-02"></Icon>
-                    <div>{{ toHumanTime(item.estimateMinutes) }}</div>
-                    <div><del>{{ toHumanTime(item.public.estimateMinutes) }}</del></div>
-                </Badge>
-                <Badge class="flex gap-1">
-                    <Icon icon="icon-park:deadline-sort"></Icon>
-                    <div>{{ deadline }}</div>
-                </Badge>
-            </div>
-            <div class="flex flex-row gap-3 mt-4">
-                <Slider v-model="progress" :min="0" :max="100" :step="1"></Slider>
-                <div class="flex gap-1">
-                    <Button v-for="progress in SHORTCUT_PROGRESSES" :key="progress" @click="updateProgress(progress)"
-                        class="px-3 py-1">{{
-                            progress }}%</Button>
+            <div class="flex flex-col w-96">
+                <div class="flex gap-1 items-center">
+                    <Badge class="flex flex-row items-center h-6">
+                        <div>{{ item.public.subject.abbr }}</div>
+                    </Badge>
+                    <MiniEditor v-model="description" placeholder="请输入公开内容/描述"></MiniEditor>
+                </div>
+                <hr>
+                <div class="flex items-center">
+                    <Badge class="h-5" variant="secondary">
+                        <Icon icon="tabler:tag-filled"></Icon> {{ range }}
+                    </Badge>
+                    <MiniEditor v-model="item.note" class="text-slate-500 text-xs" placeholder="添加备注"></MiniEditor>
                 </div>
             </div>
-        </CardContent>
-        <CardFooter>
-            <Button variant="destructive">删除</Button>
-        </CardFooter>
-    </Card>
+            <div class="flex gap-1 items-center text-sm bg-amber-200 rounded-md px-2 py-1">
+                <Icon icon="hugeicons:estimate-02"></Icon>
+                <div>{{ itemsStore.toHumanTime(item.estimateMinutes) }}</div>
+                <div><del>{{ itemsStore.toHumanTime(item.public.estimateMinutes) }}</del></div>
+            </div>
+            <div class="flex gap-1 items-center text-sm bg-lime-200 rounded-md px-2 py-1">
+                <Icon icon="icon-park:deadline-sort"></Icon>
+                <div>{{ deadline }}</div>
+            </div>
+        </div>
+    </div>
 </template>

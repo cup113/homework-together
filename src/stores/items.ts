@@ -1,13 +1,12 @@
 import { defineStore } from "pinia";
-import { nextTick, computed } from "vue";
-import { useLocalStorage } from "@vueuse/core";
+import { nextTick, computed, ref } from "vue";
 import { useUserStore } from "./user";
 import { useNetworkStore } from './network';
 import type { Item, RawPublicItem, RawUserItem, Subject } from '@/../types/contract';
 
 export const useItemsStore = defineStore("items", () => {
-    const items = useLocalStorage("HT_items", new Array<Item>());
-    const subjects = useLocalStorage("HT_subjects", new Array<Subject>());
+    const items = ref(new Array<Item>());
+    const subjects = ref(new Array<Subject>());
     const subjectsSummary = computed(() => {
         const map = new Map(subjects.value.map(subject => [
             subject.id,
@@ -39,11 +38,22 @@ export const useItemsStore = defineStore("items", () => {
         return { total, done };
     });
 
+    function toHumanTime(minutes: number) {
+        const h = Math.floor(minutes / 60);
+        const m = (minutes % 60).toFixed(0).padStart(2, '0');
+        return `${h}:${m}`;
+    }
+
     async function refreshItems() {
         const networkStore = useNetworkStore();
         const response = await networkStore.client.items.list.query();
         if (response.status === 200) {
-            items.value = response.body;
+            items.value = response.body.sort((a, b) => {
+                if (a.public.subject.id !== b.public.subject.id) {
+                    return a.public.subject.abbr.localeCompare(b.public.subject.abbr);
+                }
+                return b.estimateMinutes - a.estimateMinutes;
+            });
         } else {
             console.error(response.status);
             alert("Failed to fetch items"); // TODO: handle error
@@ -106,6 +116,7 @@ export const useItemsStore = defineStore("items", () => {
         subjects,
         subjectsSummary,
         summary,
+        toHumanTime,
         addItem,
         refreshItems,
         refreshSubjects,

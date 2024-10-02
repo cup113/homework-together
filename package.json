@@ -15,6 +15,7 @@
     "@iconify/vue": "^4.1.2",
     "@tanstack/vue-query": "^5.56.2",
     "@tanstack/vue-table": "^8.20.5",
+    "@tiptap/extension-placeholder": "^2.8.0",
     "@tiptap/pm": "^2.8.0",
     "@tiptap/starter-kit": "^2.8.0",
     "@tiptap/vue-3": "^2.8.0",

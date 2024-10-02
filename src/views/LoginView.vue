@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const userStore = useUserStore();
 const username = ref(userStore.user.username);
@@ -35,61 +36,73 @@ async function register() {
 
 <template>
     <div class="flex gap-4 justify-center items-center">
-        <form class="flex flex-col gap-2" @submit.prevent="login">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Login</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div class="flex items-center">
-                        <Label for="username" class="w-28">Username:</Label>
-                        <Input type="text" name="username" id="username" v-model="username" required />
-                    </div>
-                    <div class="flex items-center">
-                        <Label for="password" class="w-28">Password:</Label>
-                        <Input type="password" name="password" id="password" v-model="password" required />
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <div class="flex justify-center gap-4">
-                        <Button>Login</Button>
-                    </div>
-                </CardFooter>
-            </Card>
-        </form>
-        <form class="flex flex-col gap-2" @submit.prevent="register">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Register</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div class="flex items-center">
-                        <Label for="username-register" class="w-28">Username:</Label>
-                        <Input type="text" name="username" id="username-register" v-model="username" required />
-                    </div>
-                    <div class="flex items-center">
-                        <Label for="password-register" class="w-28">Password:</Label>
-                        <Input type="password" name="password" id="password-register" v-model="password" required />
-                    </div>
-                    <div class="flex items-center">
-                        <Label for="password-confirm" class="w-28">Confirm Password:</Label>
-                        <Input type="password" name="password-confirm" id="password-confirm" v-model="passwordConfirm"
-                            required />
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <div class="flex justify-center gap-4">
-                        <Button>Register</Button>
-                    </div>
-                </CardFooter>
-            </Card>
-        </form>
-        <Card>
+        <Tabs default-value="login" class="my-2 p-2 flex flex-col">
+            <TabsList class="w-full">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Register</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login">
+                <form class="flex flex-col gap-2" @submit.prevent="login">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Login</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div class="flex items-center">
+                                <Label for="username" class="w-28">Username:</Label>
+                                <Input type="text" name="username" id="username" v-model="username" required />
+                            </div>
+                            <div class="flex items-center">
+                                <Label for="password" class="w-28">Password:</Label>
+                                <Input type="password" name="password" id="password" v-model="password" required />
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <div class="flex justify-center gap-4">
+                                <Button>Login</Button>
+                            </div>
+                        </CardFooter>
+                    </Card>
+                </form>
+            </TabsContent>
+            <TabsContent value="register">
+                <form class="flex flex-col gap-2" @submit.prevent="register">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Register</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div class="flex items-center">
+                                <Label for="username-register" class="w-28">Username:</Label>
+                                <Input type="text" name="username" id="username-register" v-model="username" required />
+                            </div>
+                            <div class="flex items-center">
+                                <Label for="password-register" class="w-28">Password:</Label>
+                                <Input type="password" name="password" id="password-register" v-model="password"
+                                    required />
+                            </div>
+                            <div class="flex items-center">
+                                <Label for="password-confirm" class="w-28">Confirm Password:</Label>
+                                <Input type="password" name="password-confirm" id="password-confirm"
+                                    v-model="passwordConfirm" required />
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <div class="flex justify-center gap-4">
+                                <Button>Register</Button>
+                            </div>
+                        </CardFooter>
+                    </Card>
+                </form>
+            </TabsContent>
+        </Tabs>
+        <Card v-if="userStore.isLoggedIn">
             <CardHeader>
                 <CardTitle>Organization</CardTitle>
             </CardHeader>
             <CardContent>
-                <div v-for="organization in userStore.organizations" :key="organization.id" class="flex items-center gap-2">
+                <div v-for="organization in userStore.organizations" :key="organization.id"
+                    class="flex items-center gap-2">
                     <div>{{ organization.name }}</div>
                     <div><Button @click="userStore.join_organization(organization.id)">Join</Button></div>
                 </div>

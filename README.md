@@ -12,16 +12,19 @@ Do homework together with your friends!
 - [x] Use SHA256 for password hashing
 - [x] Add user registration
 - [x] Add Personal Summary
-- [ ] Add Leaderboard
 
-### Phase 2: Polish Details
+### Phase 2: Cooperative Basics
+
+- [x] Add organization creation & entry
+- [ ] Attach item to organization
+- [ ] Add Leaderboard
+- [ ] Import from organization's public list
+
+### Phase 3: Polish Details
 
 - [ ] Delete & Update Item
 - [ ] Add progress display (Refactor slide)
-- [ ] Add organization creation & entry
-- [ ] Attach item to organization
 - [ ] Refactor: Edit Mode
-- [ ] Import from organization's public list
 - [ ] Add organization registration
 - [ ] Add pagination in homework list
 - [ ] Add loading animation
@@ -31,8 +34,9 @@ Do homework together with your friends!
 - [ ] Add organization pagination
 - [ ] Add organization entry verification
 
-### Phase 3: Features
+### Phase 4: Features
 
 - [ ] Add Goal system
+- [ ] Add Daily Reset
 - [ ] Add Organization management
 - [ ] Add Comment & Request system
