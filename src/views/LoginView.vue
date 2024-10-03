@@ -16,10 +16,11 @@ const password = ref('');
 const passwordConfirm = ref('');
 
 async function login() {
-    const success = await userStore.login(username.value, password.value);
-    if (success) {
-        router.push('/');
-    }
+    await userStore.login(username.value, password.value);
+}
+
+function logout() {
+    userStore.logout();
 }
 
 async function register() {
@@ -64,8 +65,9 @@ async function join_organization(organizationId: string) {
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <div class="flex justify-center gap-4">
+                            <div class="flex justify-center gap-4 w-full">
                                 <Button>Login</Button>
+                                <Button type="button" @click="logout" variant="destructive">Logout</Button>
                             </div>
                         </CardFooter>
                     </Card>

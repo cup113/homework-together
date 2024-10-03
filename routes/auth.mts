@@ -1,5 +1,5 @@
 import RouteService from '../services/route.mjs';
-import type { UserAuth } from '../types/contract.js'
+import type { UserAuth, UserInfo } from '../types/contract.js'
 
 export class LoginRoute extends RouteService<UserAuth, 401> {
     private username: string;
@@ -39,6 +39,31 @@ export class RegisterRoute extends RouteService<UserAuth, 400> {
         } catch (e) {
             this.logger.info(`Error while registering user: ${e}`);
             return this.error("Username already exists.", 400)
+        }
+    }
+}
+
+export class CheckUserRoute extends RouteService<UserInfo, 401> {
+    private token: string | undefined;
+
+    constructor(token: string | undefined) {
+        super();
+        this.token = token;
+    }
+
+    protected async handle() {
+        if (!this.token) {
+            return this.error("Unauthorized", 401)
+        }
+        try {
+            const authResult = await this.auth(this.token);
+            if (authResult instanceof Error) {
+                return authResult;
+            }
+            return this.success(await this.db.checkUser());
+        } catch (e) {
+            this.logger.info(`Error while getting user info: ${e}`);
+            return this.error("Unauthorized", 401)
         }
     }
 }

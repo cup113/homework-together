@@ -48,14 +48,14 @@ const shareStore = useShareStore();
             <TableCaption>Leaderboard</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead>Rank</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Percentage</TableHead>
+                <TableHead>排名</TableHead>
+                <TableHead>用户名</TableHead>
+                <TableHead>完成度</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <LeaderBoardItem v-for="user in shareStore.rankedUsers" :key="user.id" :name="user.name" :rank="user.rank"
-                :percentage="user.percentage"></LeaderBoardItem>
+              <LeaderBoardItem v-for="user in shareStore.rankedUsers" :key="user.id" :name="user.name ?? '...'" :rank="user.rank"
+                :percentage="user.done / user.total * 100"></LeaderBoardItem>
             </TableBody>
           </Table>
         </div>

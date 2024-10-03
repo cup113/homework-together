@@ -16,8 +16,8 @@ Do homework together with your friends!
 ### Phase 2: Cooperative Basics
 
 - [x] Add organization entry
-- [ ] Import from organization's public list
-- [ ] Add Leaderboard
+- [x] Import from organization's public list
+- [x] Add Leaderboard
 - [ ] Delete Item (Public / User)
 - [ ] Update Item
 - [ ] Add progress display (Refactor slide)

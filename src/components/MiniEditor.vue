@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { computed } from 'vue';
 import { StarterKit } from '@tiptap/starter-kit';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -16,15 +17,21 @@ const editor = useEditor({
     onUpdate() {
         model.value = editor.value?.getHTML() ?? ' ';
     },
-    extensions: [StarterKit, Placeholder.configure({ placeholder: props.placeholder })],
+    extensions: [StarterKit, Placeholder.configure()],
 });
+
+const css = computed(() => ({ '--placeholder-text': `"${props.placeholder}"` }));
 </script>
 
 <template>
-    <div>
+    <div :style="css">
         <EditorContent :editor="editor" class="py-1 px-2 [&_.ProseMirror]:outline-0 min-w-40"></EditorContent>
     </div>
 </template>
 
-<style scoped>
+<style>
+.tiptap .is-empty::before {
+    @apply text-zinc-200 h-0 float-left pointer-events-none select-none;
+    content: var(--placeholder-text, '');
+}
 </style>

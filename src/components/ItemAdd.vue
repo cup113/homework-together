@@ -9,6 +9,7 @@ import { Select, SelectTrigger, SelectValue, SelectGroup, SelectContent, SelectI
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
+import { useUserStore } from '@/stores/user';
 
 const itemsStore = useItemsStore();
 
@@ -34,7 +35,9 @@ function addItem() {
         alert('请设置时间');
         return;
     }
+    const userStore = useUserStore();
     itemsStore.addItem({
+        organization: userStore.user.organizations[0]?.id,
         subject: subject.value,
         description: description.value,
         range: range.value,

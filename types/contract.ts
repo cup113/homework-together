@@ -1,14 +1,16 @@
-import type { UsersRecord, AuthSystemFields, UserItemsResponse, PublicItemsRecord, SubjectsRecord, UserItemsRecord, OrganizationsRecord, OrganizationsResponse } from './pocketbase-types.js';
+import type { UsersRecord, UsersResponse, AuthSystemFields, UserItemsResponse, PublicItemsRecord, SubjectsRecord, UserItemsRecord, OrganizationsRecord, OrganizationsResponse } from './pocketbase-types.js';
 import { PublicItemsRangeOptions } from './pocketbase-types.js';
 import z from 'zod';
 import { initContract } from '@ts-rest/core';
 
 export type UserAuth = UsersRecord & AuthSystemFields<object> & { token: string };
+export type UserInfo = Omit<UserAuth, 'organizations'> & { organizations: OrganizationsResponse[] }
 export type RawOrganization = Omit<OrganizationsRecord, 'leader' | 'managers'>
 export type SharedProgress = {
     items: Record<string, Record<string, [number, number]>>,
     subjects: Record<string, Record<string, [number, number]>>,
     overall: Record<string, [number, number]>,
+    users: UsersResponse[],
 };
 export type Subject = SubjectsRecord & Pick<AuthSystemFields, 'id'>;
 export type Item = UserItemsResponse & { public: Omit<PublicItemsRecord, 'subject'> & { subject: Subject } };
@@ -45,6 +47,16 @@ const authContract = c.router({
             password: z.string(),
         }),
         summary: 'Register a new user',
+    },
+    check: {
+        method: 'PUT',
+        path: '/api/v1/auth/check',
+        responses: {
+            200: c.type<UserInfo>(),
+            401: ErrorType,
+        },
+        body: z.object({}),
+        summary: "Check the user's authentication status, refresh the token if necessary, and synchronize the user's organizations",
     },
 });
 
@@ -84,6 +96,7 @@ const itemsContract = c.router({
         },
         body: z.object({
             publicItem: z.object({
+                organization: z.optional(z.string()),
                 deadline: z.optional(z.string()),
                 description: z.string(),
                 subject: z.string(),
@@ -136,6 +149,16 @@ const organizationsContract = c.router({
         }),
         summary: "Enter an organization",
     },
+    progress: {
+        method: 'GET',
+        path: '/api/v1/organizations/progress',
+        responses: {
+            200: c.type<SharedProgress>(),
+            401: ErrorType,
+            404: ErrorType,
+        },
+        summary: "Get the progress of the user's organizations",
+    }
 });
 
 const contract = c.router({

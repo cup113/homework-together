@@ -20,7 +20,7 @@ const rankString = computed(() => {
         <TableCell>{{ name }}</TableCell>
         <TableCell>
             <meter :value="percentage" min="0" max="100"></meter>
-            <span>{{ percentage }}%</span>
+            <span>{{ percentage.toFixed(2) }}%</span>
         </TableCell>
     </TableRow>
 </template>

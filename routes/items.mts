@@ -11,13 +11,15 @@ export class GetItemRoute extends RouteBase<Item[], 401> {
     }
 
     protected async handle() {
+        let userId: string | undefined = undefined;
         if (this.token) {
             const authResult = await this.auth(this.token);
             if (authResult instanceof Error) {
                 return authResult;
             }
+            userId = authResult.record.id;
         }
-        const items = await this.db.getUserItems();
+        const items = await this.db.getUserItems(userId);
         return this.success(items);
     }
 }

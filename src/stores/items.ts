@@ -105,11 +105,13 @@ export const useItemsStore = defineStore("items", () => {
 
     nextTick(() => {
         const userStore = useUserStore();
-        if (userStore.isLoggedIn) {
-            refreshItems();
-            refreshSubjects();
-        }
-    })
+        userStore.onChecked(() => {
+            if (userStore.isLoggedIn) {
+                refreshItems();
+                refreshSubjects();
+            }
+        });
+    });
 
     return {
         items,

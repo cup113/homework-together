@@ -1,6 +1,7 @@
 import Client from 'pocketbase';
-import type { TypedPocketBase, UserItemsResponse, PublicItemsRecord, OrganizationsResponse } from '../types/pocketbase-types.js';
+import type { TypedPocketBase, UserItemsResponse, OrganizationsResponse, UsersResponse, UserItemsRecord, PublicItemsResponse } from '../types/pocketbase-types.js';
 import type { Item, RawPublicItem, RawUserItem, RawOrganization } from '../types/contract.js';
+import dayjs from 'dayjs';
 
 export class DBService {
     protected pb: TypedPocketBase;
@@ -12,6 +13,9 @@ export class DBService {
     public async authWithToken(token: string) {
         this.pb.authStore.save(token);
         const auth = await this.pb.collection('users').authRefresh();
+        if (!this.pb.authStore.isValid) {
+            throw new Error("Invalid token");
+        }
         return auth;
     }
 
@@ -28,6 +32,10 @@ export class DBService {
             passwordConfirm: password,
             name: username,
         });
+    }
+
+    public async listUsers(): Promise<UsersResponse[]> {
+        return await this.pb.collection('users').getFullList();
     }
 
     public async listOrganizations(): Promise<OrganizationsResponse[]> {
@@ -48,11 +56,49 @@ export class DBService {
         });
     }
 
-    public async getUserItems() {
-        const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsRecord }>>({
+    public async checkUser() {
+        const EARLY = "2000-01-01 00:00:00.000";
+
+        const authResult = await this.pb.collection('users').authRefresh();
+        if (!this.pb.authStore.isValid) {
+            throw new Error("Invalid token");
+        }
+        const user = await this.pb.collection('users').getOne(authResult.record.id, {
+            expand: "organizations",
+            requestKey: this.pb.authStore.token,
+        }) as UsersResponse & { expand: { organizations: OrganizationsResponse[] } };
+        const { expand: { organizations }, ...userRest } = user;
+
+        const lastDate = dayjs((await this.pb.collection('userItems').getList(1, 1, {
+            filter: `user.id = "${user.id}"`,
+            sort: "-updated",
+            requestKey: this.pb.authStore.token,
+        })).items[0]?.updated ?? EARLY); // TODO: use user.lastActivity instead
+        const lastDateStr = lastDate.toISOString().replace("T", " ").replace("Z", "");
+        const newItems = await this.pb.collection('publicItems').getFullList({
+            filter: `updated >= "${lastDateStr}"`,
+            requestKey: this.pb.authStore.token,
+        });
+        await Promise.all(newItems.map(async item => {
+            this.pb.collection('userItems').create({
+                publicItem: item.id,
+                user: user.id,
+                estimateMinutes: item.estimateMinutes,
+            } satisfies UserItemsRecord, { requestKey: null });
+        }));
+
+        return {
+            ...userRest,
+            organizations,
+            token: authResult.token,
+        };
+    }
+
+    public async getUserItems(userId?: string) {
+        const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsResponse }>>(Object.assign({
             requestKey: this.pb.authStore.token,
             expand: "publicItem",
-        }); // TODO: add pagination
+        }, userId ? { filter: `user.id = "${userId}"` } : {})); // TODO: add pagination
         return Promise.all(items.map(async item => {
             const { expand, ...rest } = item;
             if (!expand) {

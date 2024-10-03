@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import type { Item } from '../../types/contract';
 import { useDebounce, useVModel } from '@vueuse/core';
 import { useItemsStore } from '@/stores/items';
+import { useUserStore } from '@/stores/user';
 
 import MiniEditor from '@/components/MiniEditor.vue';
 import { Icon } from '@iconify/vue';
@@ -17,18 +18,30 @@ const props = defineProps<{
 }>();
 
 const itemsStore = useItemsStore();
+const userStore = useUserStore();
 const item = useVModel(props, 'item');
+
 const deadline = computed(() => dayjs(props.item.public.deadline).format("MM/DD HH:mm"));
 const progress = ref([props.item.progress * 100]);
 const debouncedProgress = useDebounce(progress, 500);
 const description = ref(props.item.public.description);
 const etaMinutes = computed(() => (100 - progress.value[0]) * props.item.estimateMinutes / 100);
-const organizationName = computed(() => props.item.public.organization || "个人"); // TODO organization name / abbreviation
+const organizationName = computed(() => {
+    if (!props.item.public.organization) {
+        return '个人';
+    }
+    const organization = userStore.organizations.find(o => o.id === props.item.public.organization);
+    if (!organization) {
+        return '未知';
+    }
+    return organization.name;
+}); // TODO organization name / abbreviation
 const range = computed(() => ({
     all: '全体',
     some: '部分',
     private: '个人',
 }[item.value.public.range]));
+const isAuthor = computed(() => item.value.public.author === userStore.user.id);
 
 function updateProgress(value: number) {
     progress.value = [value];
@@ -60,9 +73,14 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                         <DropdownMenuLabel class="text-red-500 flex items-center gap-1">
-                            <Icon icon="material-symbols:delete-outline" />删除 <!-- TODO: Confirmation -->
+                            <Icon icon="material-symbols:delete-outline" />删除（仅个人） <!-- TODO: Confirmation -->
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                    </DropdownMenuItem>
+                    <DropdownMenuItem v-if="isAuthor">
+                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1">
+                            <Icon icon="material-symbols:delete-outline" />删除（全体） <!-- TODO: Confirmation -->
+                        </DropdownMenuLabel>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -75,7 +93,7 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
             </div>
             <div class="flex flex-col w-96">
                 <div class="flex gap-1 items-center">
-                    <Badge v-if="organizationName" class="flex flex-row items-center h-6">
+                    <Badge v-if="organizationName" variant="secondary" class="flex flex-row items-center h-6">
                         <div>{{ organizationName }}</div>
                     </Badge>
                     <Badge class="flex flex-row items-center h-6 font-mono">
@@ -85,7 +103,7 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
                 </div>
                 <hr>
                 <div class="flex items-center gap-1">
-                    <Badge class="h-5" variant="secondary">
+                    <Badge class="h-5" variant="outline">
                         <Icon icon="tabler:tag-filled"></Icon> {{ range }}
                     </Badge>
                     <div class="flex gap-1 items-center text-xs bg-lime-200 rounded-md px-2 py-0.5">

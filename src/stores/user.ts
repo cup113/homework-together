@@ -1,19 +1,22 @@
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { defineStore } from 'pinia'
 import { useLocalStorage } from '@vueuse/core'
 import { useNetworkStore } from './network';
 import { Sha256 } from '@aws-crypto/sha256-js';
 import type { OrganizationsResponse } from 'types/pocketbase-types';
 
+const initialUser = () => ({
+  id: '',
+  username: '',
+  organizations: new Array<{ name: string, id: string }>(),
+})
+
 export const useUserStore = defineStore('user', () => {
   const token = useLocalStorage('HT_token', '');
   const isLoggedIn = computed(() => token.value !== '');
-  const user = useLocalStorage('HT_user', {
-    id: '',
-    username: '',
-    organizations: new Array<{ name: string, id: string }>(),
-  });
-  const organizations = ref(new Array<OrganizationsResponse>())
+  const user = useLocalStorage('HT_user', initialUser());
+  const organizations = ref(new Array<OrganizationsResponse>());
+  const checked = ref(false);
 
   function sha256(str: string): string {
     const hash = new Sha256();
@@ -25,6 +28,41 @@ export const useUserStore = defineStore('user', () => {
       hex += byte.toString(16).toUpperCase();
     });
     return hex;
+  }
+
+  async function check() {
+    const network = useNetworkStore();
+    if (!isLoggedIn.value) {
+      return;
+    }
+    const response = await network.client.auth.check.mutation({ body: {} });
+    if (response.status === 401) {
+      logout();
+      console.error(response.body.message);
+      alert('Session expired. Please log in again.'); // TODO: handle error
+      return;
+    } else if (response.status !== 200) {
+      console.error(response.body);
+      alert('Failed to check session.'); // TODO: handle error
+      return;
+    }
+    token.value = response.body.token;
+    user.value.username = response.body.username;
+    user.value.organizations = response.body.organizations;
+    checked.value = true;
+  }
+
+  function onChecked(func: CallableFunction) {
+    watch(checked, newValue => {
+      if (newValue) {
+        func();
+      }
+    });
+  }
+
+  function logout() {
+    token.value = '';
+    user.value = initialUser();
   }
 
   async function login(username: string, password: string) {
@@ -39,7 +77,7 @@ export const useUserStore = defineStore('user', () => {
       token.value = response.body.token;
       user.value.id = response.body.id;
       user.value.username = response.body.username;
-      return true;
+      location.assign('/');
     } else {
       alert('Login failed.'); // TODO: handle error
       return false;
@@ -88,13 +126,19 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  list_organizations();
+  nextTick(() => {
+    check();
+  });
+
+  onChecked(list_organizations);
 
   return {
     isLoggedIn,
     token,
     user,
     organizations,
+    onChecked,
+    logout,
     login,
     register,
     join_organization,

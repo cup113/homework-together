@@ -9,10 +9,10 @@ import ViteExpress from "vite-express";
 
 import contract from './types/contract.js';
 import loggerService from './services/logger.mjs'
-import { LoginRoute, RegisterRoute } from './routes/auth.mjs';
+import { LoginRoute, RegisterRoute, CheckUserRoute } from './routes/auth.mjs';
 import { CreateItemRoute, GetItemRoute, UpdateUserItemRoute } from './routes/items.mjs'
 import { ListSubjectsRoute } from './routes/subjects.mjs';
-import { ListOrganizationsRoute, EnterOrganizationRoute } from './routes/organizations.mjs'
+import { ListOrganizationsRoute, EnterOrganizationRoute, GetProgressRoute } from './routes/organizations.mjs'
 
 const app: Express = express();
 
@@ -31,6 +31,9 @@ const router = server.router(contract, {
         },
         register({ body: { username, password } }) {
             return new RegisterRoute(username, password).getResponse();
+        },
+        check({ headers: { authorization } }) {
+            return new CheckUserRoute(authorization).getResponse();
         }
     },
     items: {
@@ -55,7 +58,10 @@ const router = server.router(contract, {
         },
         join({ headers: { authorization }, body: { organizationId } }) {
             return new EnterOrganizationRoute(authorization, organizationId).getResponse();
-        }
+        },
+        progress({ headers: { authorization } }) {
+            return new GetProgressRoute(authorization).getResponse();
+        },
     }
 });
 
