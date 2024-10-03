@@ -7,7 +7,7 @@ const userStore = useUserStore();
 </script>
 
 <template>
-    <NavigationMenu class="px-6 py-2 flex gap-2 border-b">
+    <NavigationMenu class="px-6 py-2 flex gap-2">
         <div class="flex gap-2 items-center">
             <img src="/favicon.ico" alt="logo" width="24" />
             <h1 class="font-bold text-lg">Homework Together</h1>

@@ -23,6 +23,7 @@ const progress = ref([props.item.progress * 100]);
 const debouncedProgress = useDebounce(progress, 500);
 const description = ref(props.item.public.description);
 const etaMinutes = computed(() => (100 - progress.value[0]) * props.item.estimateMinutes / 100);
+const organizationName = computed(() => props.item.public.organization || "个人"); // TODO organization name / abbreviation
 const range = computed(() => ({
     all: '全体',
     some: '部分',
@@ -74,27 +75,30 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
             </div>
             <div class="flex flex-col w-96">
                 <div class="flex gap-1 items-center">
-                    <Badge class="flex flex-row items-center h-6">
+                    <Badge v-if="organizationName" class="flex flex-row items-center h-6">
+                        <div>{{ organizationName }}</div>
+                    </Badge>
+                    <Badge class="flex flex-row items-center h-6 font-mono">
                         <div>{{ item.public.subject.abbr }}</div>
                     </Badge>
                     <MiniEditor v-model="description" placeholder="请输入公开内容/描述"></MiniEditor>
                 </div>
                 <hr>
-                <div class="flex items-center">
+                <div class="flex items-center gap-1">
                     <Badge class="h-5" variant="secondary">
                         <Icon icon="tabler:tag-filled"></Icon> {{ range }}
                     </Badge>
+                    <div class="flex gap-1 items-center text-xs bg-lime-200 rounded-md px-2 py-0.5">
+                        <Icon icon="icon-park:deadline-sort"></Icon>
+                        <div>{{ deadline }}</div>
+                    </div>
                     <MiniEditor v-model="item.note" class="text-slate-500 text-xs" placeholder="添加备注"></MiniEditor>
                 </div>
             </div>
             <div class="flex gap-1 items-center text-sm bg-amber-200 rounded-md px-2 py-1">
                 <Icon icon="hugeicons:estimate-02"></Icon>
-                <div>{{ itemsStore.toHumanTime(item.estimateMinutes) }}</div>
-                <div><del>{{ itemsStore.toHumanTime(item.public.estimateMinutes) }}</del></div>
-            </div>
-            <div class="flex gap-1 items-center text-sm bg-lime-200 rounded-md px-2 py-1">
-                <Icon icon="icon-park:deadline-sort"></Icon>
-                <div>{{ deadline }}</div>
+                <div class="font-bold">{{ itemsStore.toHumanTime(item.estimateMinutes) }}</div>
+                <div class="text-xs">{{ itemsStore.toHumanTime(item.public.estimateMinutes) }}</div>
             </div>
         </div>
     </div>
