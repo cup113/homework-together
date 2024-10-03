@@ -22,7 +22,7 @@ const deadline = computed(() => dayjs(props.item.public.deadline).format("MM/DD 
 const progress = ref([props.item.progress * 100]);
 const debouncedProgress = useDebounce(progress, 500);
 const description = ref(props.item.public.description);
-const doneMinutes = computed(() => progress.value[0] * props.item.estimateMinutes / 100);
+const etaMinutes = computed(() => (100 - progress.value[0]) * props.item.estimateMinutes / 100);
 const range = computed(() => ({
     all: '全体',
     some: '部分',
@@ -69,8 +69,8 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
                 <div>
                     <Slider v-model="progress" :min="0" :max="100" :step="1"></Slider>
                 </div>
-                <div class="text-sm text-slate-700 text-center">{{ progress[0] }}% ({{
-                    itemsStore.toHumanTime(doneMinutes) }})</div>
+                <div class="text-sm text-slate-700 text-center">{{ progress[0] }}% -{{
+                    itemsStore.toHumanTime(etaMinutes) }}</div>
             </div>
             <div class="flex flex-col w-96">
                 <div class="flex gap-1 items-center">

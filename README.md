@@ -15,28 +15,28 @@ Do homework together with your friends!
 
 ### Phase 2: Cooperative Basics
 
-- [x] Add organization creation & entry
-- [ ] Attach item to organization
-- [ ] Add Leaderboard
+- [x] Add organization entry
 - [ ] Import from organization's public list
+- [ ] Add Leaderboard
+- [ ] Delete Item (Public / User)
+- [ ] Update Item
+- [ ] Add progress display (Refactor slide)
 
 ### Phase 3: Polish Details
 
-- [ ] Delete & Update Item
-- [ ] Add progress display (Refactor slide)
-- [ ] Refactor: Edit Mode
+- [ ] Attach item to organization
 - [ ] Add organization registration
 - [ ] Add pagination in homework list
+- [ ] Add Daily Reset
 - [ ] Add loading animation
 - [ ] Add Subject belonging to organization
 - [ ] Handle Errors
 - [ ] Add leaderboard pagination
 - [ ] Add organization pagination
-- [ ] Add organization entry verification
 
 ### Phase 4: Features
 
 - [ ] Add Goal system
-- [ ] Add Daily Reset
+- [ ] Add organization entry verification
 - [ ] Add Organization management
 - [ ] Add Comment & Request system

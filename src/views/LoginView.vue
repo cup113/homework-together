@@ -6,6 +6,7 @@ import router from '@/router/index';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
@@ -32,6 +33,10 @@ async function register() {
     }
 }
 
+async function join_organization(organizationId: string) {
+    await userStore.join_organization(organizationId);
+}
+
 </script>
 
 <template>
@@ -40,6 +45,7 @@ async function register() {
             <TabsList class="w-full">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
+                <TabsTrigger value="organizations" v-if="userStore.isLoggedIn">Organizations</TabsTrigger>
             </TabsList>
             <TabsContent value="login">
                 <form class="flex flex-col gap-2" @submit.prevent="login">
@@ -95,18 +101,23 @@ async function register() {
                     </Card>
                 </form>
             </TabsContent>
+            <TabsContent value="organizations">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Organization</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div v-for="organization in userStore.organizations" :key="organization.id"
+                            class="flex items-center gap-2">
+                            <div>{{ organization.name }}</div>
+                            <div>
+                                <Button @click="join_organization(organization.id)" v-if="!userStore.user.organizations.some(o => o.id === organization.id)">Join</Button>
+                                <Badge v-else>Joined</Badge>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
         </Tabs>
-        <Card v-if="userStore.isLoggedIn">
-            <CardHeader>
-                <CardTitle>Organization</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div v-for="organization in userStore.organizations" :key="organization.id"
-                    class="flex items-center gap-2">
-                    <div>{{ organization.name }}</div>
-                    <div><Button @click="userStore.join_organization(organization.id)">Join</Button></div>
-                </div>
-            </CardContent>
-        </Card>
     </div>
 </template>
