@@ -13,9 +13,9 @@ export const useItemsStore = defineStore("items", () => {
             Object.assign({}, subject, { done: 0, total: 0 })
         ]));
         items.value.forEach(item => {
-            const subject = map.get(item.public.subject.id);
+            const subject = map.get(item.public.subject);
             if (!subject) {
-                console.error(`Subject ${item.public.subject.id} not found`);
+                console.error(`Subject ${item.public.subject} not found`);
                 return;
             }
             subject.done += item.progress * item.estimateMinutes;
@@ -37,6 +37,20 @@ export const useItemsStore = defineStore("items", () => {
         });
         return { total, done };
     });
+    const itemsSorted = computed(() => {
+        return items.value.map(item => ({
+            ...item,
+            subject: subjects.value.find(subject => subject.id === item.public.subject)!,
+        })).sort((a, b) => {
+            if (a.subject !== b.subject) {
+                return a.subject.abbr.localeCompare(b.subject.abbr);
+            }
+            if (a.public.deadline !== b.public.deadline) {
+                return (b.public.deadline ?? "").localeCompare(a.public.deadline ?? "");
+            }
+            return a.public.description.localeCompare(b.public.description);
+        });
+    });
 
     function toHumanTime(minutes: number) {
         const h = Math.floor(minutes / 60);
@@ -46,14 +60,10 @@ export const useItemsStore = defineStore("items", () => {
 
     async function refreshItems() {
         const networkStore = useNetworkStore();
+        await refreshSubjects();
         const response = await networkStore.client.items.list.query();
         if (response.status === 200) {
-            items.value = response.body.sort((a, b) => {
-                if (a.public.subject.id !== b.public.subject.id) {
-                    return a.public.subject.abbr.localeCompare(b.public.subject.abbr);
-                }
-                return b.estimateMinutes - a.estimateMinutes;
-            });
+            items.value = response.body
         } else {
             console.error(response.status);
             alert("Failed to fetch items");
@@ -71,17 +81,22 @@ export const useItemsStore = defineStore("items", () => {
         }
     }
 
-    async function updateProgress(item: Item, progress: number) {
+    async function updateProgress(itemId: string, progress: number) {
         const networkStore = useNetworkStore();
         const response = await networkStore.client.items.update.mutation({
             body: {
-                id: item.id,
                 userItem: {
+                    id: itemId,
                     progress,
                 },
             }
         });
         if (response.status === 200) {
+            const item = items.value.find(item => item.id === itemId);
+            if (!item) {
+                console.error(`Item ${itemId} not found`);
+                return;
+            }
             item.progress = progress;
         } else {
             console.error(response.status);
@@ -131,13 +146,13 @@ export const useItemsStore = defineStore("items", () => {
         userStore.onChecked(() => {
             if (userStore.isLoggedIn) {
                 refreshItems();
-                refreshSubjects();
             }
         });
     });
 
     return {
         items,
+        itemsSorted,
         subjects,
         subjectsSummary,
         summary,

@@ -110,11 +110,11 @@ export class GetProgressRoute extends RouteBase<SharedProgress, 401 | 404> {
 
             items.forEach((item) => {
                 const itemArray = this.get_map_or_create(
-                    this.get_map_or_create(mapItems, item.public.id, () => new Map()),
+                    this.get_map_or_create(mapItems, item.publicItem, () => new Map()),
                     item.user, () => [0, 0],
                 );
                 const subjectArray = this.get_map_or_create(
-                    this.get_map_or_create(mapSubjects, item.public.subject.id, () => new Map()),
+                    this.get_map_or_create(mapSubjects, item.public.subject, () => new Map()),
                     item.user, () => [0, 0],
                 );
                 const overallArray = this.get_map_or_create(mapOverall, item.user, () => [0, 0]);

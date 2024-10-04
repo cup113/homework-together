@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import dayjs from 'dayjs';
 import type { Item } from '../../types/contract';
-import { useDebounce, useVModel } from '@vueuse/core';
+import { useDebounce } from '@vueuse/core';
 import { useItemsStore } from '@/stores/items';
 import { useUserStore } from '@/stores/user';
 
@@ -19,12 +19,13 @@ const props = defineProps<{
 
 const itemsStore = useItemsStore();
 const userStore = useUserStore();
-const item = useVModel(props, 'item');
 
+const subject = computed(() => itemsStore.subjects.find(s => s.id === props.item.public.subject));
 const deadline = computed(() => dayjs(props.item.public.deadline).format("MM/DD HH:mm"));
 const progress = ref([props.item.progress * 100]);
 const debouncedProgress = useDebounce(progress, 500);
 const description = ref(props.item.public.description);
+const note = ref(props.item.note);
 const etaMinutes = computed(() => (100 - progress.value[0]) * props.item.estimateMinutes / 100);
 const organizationName = computed(() => {
     if (!props.item.public.organization) {
@@ -37,10 +38,10 @@ const organizationName = computed(() => {
     return organization.name;
 });
 const permittedToDeletePublic = computed(() => {
-    if (userStore.user.id === item.value.public.author) {
+    if (userStore.user.id === props.item.public.author) {
         return true;
     }
-    const organization = userStore.organizations.find(o => o.id === item.value.public.organization);
+    const organization = userStore.organizations.find(o => o.id === props.item.public.organization);
     if (!organization) {
         return false;
     }
@@ -50,14 +51,14 @@ const range = computed(() => ({
     all: '全体',
     some: '部分',
     private: '个人',
-}[item.value.public.range]));
+}[props.item.public.range]));
 
 function updateProgress(value: number) {
     progress.value = [value];
 }
 
 watch(debouncedProgress, value => {
-    itemsStore.updateProgress(props.item, value[0] / 100);
+    itemsStore.updateProgress(props.item.id, value[0] / 100);
 });
 
 const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
@@ -106,7 +107,7 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
                         <div>{{ organizationName }}</div>
                     </Badge>
                     <Badge class="flex flex-row items-center h-6 font-mono">
-                        <div>{{ item.public.subject.abbr }}</div>
+                        <div>{{ subject?.abbr }}</div>
                     </Badge>
                     <MiniEditor v-model="description" placeholder="请输入公开内容/描述"></MiniEditor>
                 </div>
@@ -119,7 +120,7 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
                         <Icon icon="icon-park:deadline-sort"></Icon>
                         <div>{{ deadline }}</div>
                     </div>
-                    <MiniEditor v-model="item.note" class="text-slate-500 text-xs" placeholder="添加备注"></MiniEditor>
+                    <MiniEditor v-model="note" class="text-slate-500 text-xs" placeholder="添加备注"></MiniEditor>
                 </div>
             </div>
             <div class="flex gap-1 items-center text-sm bg-amber-200 rounded-md px-2 py-1">

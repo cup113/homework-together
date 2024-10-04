@@ -1,6 +1,5 @@
 import RouteBase from "../services/route.mjs";
-import type { Item, RawUserItem, RawPublicItem } from "../types/contract.js";
-import type { PublicItemsRecord, UserItemsRecord } from "../types/pocketbase-types.js";
+import type { Item, RawUserItem, RawPublicItem, ItemsUpdate } from "../types/contract.js";
 
 export class GetItemRoute extends RouteBase<Item[], 401> {
     private token: string | undefined;
@@ -26,16 +25,14 @@ export class GetItemRoute extends RouteBase<Item[], 401> {
 
 export class UpdateItemRoute extends RouteBase<true, 401 | 403 | 404> {
     private token: string | undefined;
-    private id: string;
-    private userData?: Partial<UserItemsRecord>;
-    private publicData?: Partial<PublicItemsRecord>;
+    private publicData: ItemsUpdate['publicItem'];
+    private userData: ItemsUpdate['userItem'];
 
-    constructor(token: string | undefined, id: string, userData?: Partial<UserItemsRecord>, publicData?: Partial<PublicItemsRecord>) {
+    constructor(token: string | undefined, publicData: ItemsUpdate['publicItem'], userData: ItemsUpdate['userItem']) {
         super();
         this.token = token;
-        this.id = id;
-        this.userData = userData;
         this.publicData = publicData;
+        this.userData = userData;
     }
 
     protected async handle() {
@@ -48,10 +45,12 @@ export class UpdateItemRoute extends RouteBase<true, 401 | 403 | 404> {
         }
         try {
             if (this.userData) {
-                await this.db.updateUserItem(this.id, this.userData);
+                const { id, ...userData } = this.userData;
+                await this.db.updateUserItem(id, userData);
             }
             if (this.publicData) {
-                await this.db.updatePublicItem(this.id, this.publicData);
+                const { id, ...publicData } = this.publicData;
+                await this.db.updatePublicItem(id, publicData);
             }
         } catch (error) {
             return this.convertError(error, [403, 404])

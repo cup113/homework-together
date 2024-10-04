@@ -13,7 +13,7 @@ export type SharedProgress = {
     users: UsersResponse[],
 };
 export type Subject = SubjectsRecord & Pick<AuthSystemFields, 'id'>;
-export type Item = UserItemsResponse & { public: Omit<PublicItemsRecord, 'subject'> & { subject: Subject } };
+export type Item = UserItemsResponse & { public: PublicItemsRecord };
 export type RawUserItem = Omit<UserItemsRecord, 'user' | 'publicItem'>
 export type RawPublicItem = Omit<PublicItemsRecord, 'author'>
 
@@ -23,8 +23,8 @@ const GENERAL_STRING = z.string().max(1024);
 const LONG_STRING = z.string().max(32 * 1024);
 
 const itemsUpdateSchema = z.object({
-    id: ID,
     publicItem: z.optional(z.object({
+        id: ID,
         organization: z.optional(ID),
         deadline: z.optional(DATE_STR),
         description: z.optional(LONG_STRING),
@@ -36,11 +36,12 @@ const itemsUpdateSchema = z.object({
             PublicItemsRangeOptions.private
         ])),
     })),
-    userItem: z.object({
+    userItem: z.optional(z.object({
+        id: ID,
         progress: z.optional(z.number()),
         estimateMinutes: z.optional(z.number()),
         note: z.optional(LONG_STRING),
-    }),
+    })),
 });
 const itemsCreateSchema = z.object({
     publicItem: z.object({

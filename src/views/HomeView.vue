@@ -63,7 +63,7 @@ const shareStore = useShareStore();
       <section>
         <div class="flex flex-col gap-1">
           <ItemAdd></ItemAdd>
-          <ItemDisplay v-for="item in itemsStore.items" :key="item.id" :item="item"></ItemDisplay>
+          <ItemDisplay v-for="item in itemsStore.itemsSorted" :key="item.id" :item="item"></ItemDisplay>
         </div>
       </section>
     </div>

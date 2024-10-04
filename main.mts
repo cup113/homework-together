@@ -40,8 +40,8 @@ const router = server.router(contract, {
         list({ headers: { authorization } }) {
             return new GetItemRoute(authorization).getResponse();
         },
-        update({ headers: { authorization }, body: { id, publicItem, userItem } }) {
-            return new UpdateItemRoute(authorization, id, publicItem, userItem).getResponse();
+        update({ headers: { authorization }, body: { publicItem, userItem } }) {
+            return new UpdateItemRoute(authorization, publicItem, userItem).getResponse();
         },
         create({ headers: { authorization }, body: { publicItem, userItem } }) {
             return new CreateItemRoute(authorization, publicItem, userItem).getResponse();

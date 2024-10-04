@@ -95,7 +95,7 @@ export class DBService {
         };
     }
 
-    public async getUserItems(userId?: string) {
+    public async getUserItems(userId?: string): Promise<Item[]> {
         const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsResponse }>>(Object.assign({
             requestKey: this.pb.authStore.token,
             expand: "publicItem",
@@ -106,13 +106,9 @@ export class DBService {
                 throw new Error("Item is missing publicItem expand");
             }
             const publicItem = expand.publicItem;
-            const { subject, ...restPublic } = publicItem;
             return {
                 ...rest,
-                public: {
-                    subject: await this.getSubject(subject),
-                   ...restPublic,
-                },
+                public: publicItem,
             }
         }));
     }
@@ -131,13 +127,9 @@ export class DBService {
         }, {
             requestKey: this.pb.authStore.token + publicItem.description,
         });
-        const { subject, ...restPublic } = publicResult;
         return {
             ...userResult,
-            public: {
-                ...restPublic,
-                subject: await this.getSubject(subject),
-            }
+            public: publicResult,
         };
     }
 
@@ -172,12 +164,6 @@ export class DBService {
 
     public async listSubjects() {
         return await this.pb.collection('subjects').getFullList({
-            requestKey: null,
-        });
-    }
-
-    public async getSubject(id: string) {
-        return await this.pb.collection('subjects').getOne(id, {
             requestKey: null,
         });
     }
