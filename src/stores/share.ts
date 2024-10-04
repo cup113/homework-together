@@ -33,7 +33,7 @@ export const useShareStore = defineStore('share', () => {
             sharedProgress.overall = progress.body.overall;
         } else {
             console.error(progress.body);
-            alert('Failed to fetch progress'); // TODO handle error
+            alert('Failed to fetch progress');
         }
     }
 

@@ -39,11 +39,11 @@ export const useUserStore = defineStore('user', () => {
     if (response.status === 401) {
       logout();
       console.error(response.body.message);
-      alert('Session expired. Please log in again.'); // TODO: handle error
+      alert('Session expired. Please log in again.');
       return;
     } else if (response.status !== 200) {
       console.error(response.body);
-      alert('Failed to check session.'); // TODO: handle error
+      alert('Failed to check session.');
       return;
     }
     token.value = response.body.token;
@@ -79,7 +79,7 @@ export const useUserStore = defineStore('user', () => {
       user.value.username = response.body.username;
       location.assign('/');
     } else {
-      alert('Login failed.'); // TODO: handle error
+      alert('Login failed.');
       return false;
     }
   };
@@ -95,7 +95,7 @@ export const useUserStore = defineStore('user', () => {
     if (response.status === 200) {
       return await login(username, password);
     } else {
-      alert('Registration failed.'); // TODO: handle error
+      alert('Registration failed.');
       return false;
     }
   }
@@ -107,7 +107,7 @@ export const useUserStore = defineStore('user', () => {
       organizations.value = response.body;
     } else {
       console.error(response.body);
-      alert('Failed to list organizations.'); // TODO: handle error
+      alert('Failed to list organizations.');
     }
   }
 
@@ -121,7 +121,7 @@ export const useUserStore = defineStore('user', () => {
       return true;
     } else {
       console.error(response.body);
-      alert('Failed to join organization.'); // TODO: handle error
+      alert('Failed to join organization.');
       return false;
     }
   }

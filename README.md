@@ -18,24 +18,34 @@ Do homework together with your friends!
 - [x] Add organization entry
 - [x] Import from organization's public list
 - [x] Add Leaderboard
-- [ ] Delete Item (Public / User)
-- [ ] Update Item
+- [x] Delete Item (Public / User)
+- [ ] Update Item (Refactor to diff system)
+- [ ] Poll progress (every 2 minutes / updated)
 - [ ] Add progress display (Refactor slide)
 
-### Phase 3: Polish Details
+### Phase 3: Critical Features
 
+- [ ] Add Activity Mark
+- [ ] Add Daily Reset
+- [ ] Add pagination in homework list
+
+### Phase 4: Polish Details
+
+- [ ] Delete Item Confirmation
 - [ ] Attach item to organization
 - [ ] Add organization registration
-- [ ] Add pagination in homework list
-- [ ] Add Daily Reset
 - [ ] Add loading animation
-- [ ] Add Subject belonging to organization
+- [ ] Undo & Redo System
 - [ ] Handle Errors
 - [ ] Add leaderboard pagination
 - [ ] Add organization pagination
 
-### Phase 4: Features
+### Phase 5: Features
 
+- [ ] Add customization
+- [ ] Updated Item: Organization, range, publicEstimate
+- [ ] Add user management (find password, etc.)
+- [ ] Add Subject belonging to organization
 - [ ] Add Goal system
 - [ ] Add organization entry verification
 - [ ] Add Organization management

@@ -56,7 +56,7 @@ export const useItemsStore = defineStore("items", () => {
             });
         } else {
             console.error(response.status);
-            alert("Failed to fetch items"); // TODO: handle error
+            alert("Failed to fetch items");
         }
     }
 
@@ -67,7 +67,7 @@ export const useItemsStore = defineStore("items", () => {
             subjects.value = response.body;
         } else {
             console.error(response.status);
-            alert("Failed to fetch subjects"); // TODO: handle error
+            alert("Failed to fetch subjects");
         }
     }
 
@@ -76,14 +76,16 @@ export const useItemsStore = defineStore("items", () => {
         const response = await networkStore.client.items.update.mutation({
             body: {
                 id: item.id,
-                progress,
+                userItem: {
+                    progress,
+                },
             }
         });
         if (response.status === 200) {
             item.progress = progress;
         } else {
             console.error(response.status);
-            alert("Failed to update progress"); // TODO: handle error
+            alert("Failed to update progress");
         }
     }
 
@@ -99,7 +101,28 @@ export const useItemsStore = defineStore("items", () => {
             items.value.push(response.body);
         } else {
             console.error(response.status);
-            alert("Failed to add item"); // TODO: handle error
+            alert("Failed to add item");
+        }
+    }
+
+    async function deleteItem(itemId: string, type: 'public' | 'user') {
+        const network = useNetworkStore();
+        const response = await network.client.items.delete.mutation({
+            body: {
+                id: itemId,
+                type,
+            }
+        });
+        if (response.status === 200) {
+            const index = items.value.findIndex(item => (type === 'public' ? item.publicItem === itemId : item.id === itemId));
+            if (index >= 0) {
+                items.value.splice(index, 1);
+            } else {
+                console.error(`Item ${itemId} not found`);
+            }
+        } else {
+            console.error(response.status);
+            alert("Failed to delete item");
         }
     }
 
@@ -120,6 +143,7 @@ export const useItemsStore = defineStore("items", () => {
         summary,
         toHumanTime,
         addItem,
+        deleteItem,
         refreshItems,
         refreshSubjects,
         updateProgress,

@@ -35,13 +35,22 @@ const organizationName = computed(() => {
         return '未知';
     }
     return organization.name;
-}); // TODO organization name / abbreviation
+});
+const permittedToDeletePublic = computed(() => {
+    if (userStore.user.id === item.value.public.author) {
+        return true;
+    }
+    const organization = userStore.organizations.find(o => o.id === item.value.public.organization);
+    if (!organization) {
+        return false;
+    }
+    return organization.leader === userStore.user.id || organization.managers.includes(userStore.user.id);
+});
 const range = computed(() => ({
     all: '全体',
     some: '部分',
     private: '个人',
 }[item.value.public.range]));
-const isAuthor = computed(() => item.value.public.author === userStore.user.id);
 
 function updateProgress(value: number) {
     progress.value = [value];
@@ -72,14 +81,14 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
                         </DropdownMenuLabel>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1">
-                            <Icon icon="material-symbols:delete-outline" />删除（仅个人） <!-- TODO: Confirmation -->
+                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1" @click="itemsStore.deleteItem(item.id, 'user')">
+                            <Icon icon="material-symbols:delete-outline"/>删除（仅个人）
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                     </DropdownMenuItem>
-                    <DropdownMenuItem v-if="isAuthor">
-                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1">
-                            <Icon icon="material-symbols:delete-outline" />删除（全体） <!-- TODO: Confirmation -->
+                    <DropdownMenuItem v-if="permittedToDeletePublic">
+                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1" @click="itemsStore.deleteItem(item.publicItem, 'public')">
+                            <Icon icon="material-symbols:delete-outline" />删除（全体）
                         </DropdownMenuLabel>
                     </DropdownMenuItem>
                 </DropdownMenuContent>

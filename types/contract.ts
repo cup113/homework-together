@@ -17,6 +17,54 @@ export type Item = UserItemsResponse & { public: Omit<PublicItemsRecord, 'subjec
 export type RawUserItem = Omit<UserItemsRecord, 'user' | 'publicItem'>
 export type RawPublicItem = Omit<PublicItemsRecord, 'author'>
 
+const ID = z.string().length(15);
+const DATE_STR = z.string().max(30);
+const GENERAL_STRING = z.string().max(1024);
+const LONG_STRING = z.string().max(32 * 1024);
+
+const itemsUpdateSchema = z.object({
+    id: ID,
+    publicItem: z.optional(z.object({
+        organization: z.optional(ID),
+        deadline: z.optional(DATE_STR),
+        description: z.optional(LONG_STRING),
+        subject: z.optional(ID),
+        estimateMinutes: z.optional(z.number()),
+        range: z.optional(z.enum([
+            PublicItemsRangeOptions.all,
+            PublicItemsRangeOptions.some,
+            PublicItemsRangeOptions.private
+        ])),
+    })),
+    userItem: z.object({
+        progress: z.optional(z.number()),
+        estimateMinutes: z.optional(z.number()),
+        note: z.optional(LONG_STRING),
+    }),
+});
+const itemsCreateSchema = z.object({
+    publicItem: z.object({
+        organization: z.optional(ID),
+        deadline: z.optional(DATE_STR),
+        description: LONG_STRING,
+        subject: ID,
+        estimateMinutes: z.number(),
+        range: z.enum([
+            PublicItemsRangeOptions.all,
+            PublicItemsRangeOptions.some,
+            PublicItemsRangeOptions.private
+        ]),
+    }),
+    userItem: z.object({
+        progress: z.optional(z.number()),
+        estimateMinutes: z.number(),
+        note: z.optional(LONG_STRING),
+    }),
+});
+
+export type ItemsUpdate = z.infer<typeof itemsUpdateSchema>;
+export type ItemsCreate = z.infer<typeof itemsCreateSchema>;
+
 const c = initContract();
 
 const ErrorType = c.type<{ message: string }>();
@@ -30,8 +78,8 @@ const authContract = c.router({
             401: ErrorType,
         },
         body: z.object({
-            username: z.string(),
-            password: z.string(),
+            username: GENERAL_STRING,
+            password: GENERAL_STRING,
         }),
         summary: 'Login to the system',
     },
@@ -43,8 +91,8 @@ const authContract = c.router({
             400: ErrorType,
         },
         body: z.object({
-            username: z.string(),
-            password: z.string(),
+            username: GENERAL_STRING,
+            password: GENERAL_STRING,
         }),
         summary: 'Register a new user',
     },
@@ -69,7 +117,7 @@ const itemsContract = c.router({
             401: ErrorType,
         },
         summary: "List all items",
-    }, // TODO: add pagination
+    },
     update: {
         method: 'PUT',
         path: '/api/v1/items',
@@ -79,10 +127,7 @@ const itemsContract = c.router({
             403: ErrorType,
             404: ErrorType,
         },
-        body: z.object({
-            id: z.string(),
-            progress: z.number(),
-        }),
+        body: itemsUpdateSchema,
         summary: "Update an item",
     },
     create: {
@@ -94,26 +139,23 @@ const itemsContract = c.router({
             403: ErrorType,
             404: ErrorType,
         },
-        body: z.object({
-            publicItem: z.object({
-                organization: z.optional(z.string()),
-                deadline: z.optional(z.string()),
-                description: z.string(),
-                subject: z.string(),
-                estimateMinutes: z.number(),
-                range: z.enum([
-                    PublicItemsRangeOptions.all,
-                    PublicItemsRangeOptions.some,
-                    PublicItemsRangeOptions.private
-                ]),
-            }),
-            userItem: z.object({
-                progress: z.optional(z.number()),
-                estimateMinutes: z.number(),
-                note: z.optional(z.string()),
-            }),
-        }),
+        body: itemsCreateSchema,
         summary: "Create a new item",
+    },
+    delete: {
+        method: 'DELETE',
+        path: '/api/v1/items',
+        responses: {
+            200: c.type<true>(),
+            401: ErrorType,
+            403: ErrorType,
+            404: ErrorType,
+        },
+        body: z.object({
+            type: z.enum(['public', 'user']),
+            id: ID,
+        }),
+        summary: "Delete an item",
     },
 });
 
@@ -145,7 +187,7 @@ const organizationsContract = c.router({
             404: ErrorType,
         },
         body: z.object({
-            organizationId: z.string(),
+            organizationId: ID,
         }),
         summary: "Enter an organization",
     },

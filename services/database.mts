@@ -1,5 +1,5 @@
 import Client from 'pocketbase';
-import type { TypedPocketBase, UserItemsResponse, OrganizationsResponse, UsersResponse, UserItemsRecord, PublicItemsResponse } from '../types/pocketbase-types.js';
+import type { TypedPocketBase, UserItemsResponse, OrganizationsResponse, UsersResponse, UserItemsRecord, PublicItemsResponse, PublicItemsRecord } from '../types/pocketbase-types.js';
 import type { Item, RawPublicItem, RawUserItem, RawOrganization } from '../types/contract.js';
 import dayjs from 'dayjs';
 
@@ -66,14 +66,15 @@ export class DBService {
         const user = await this.pb.collection('users').getOne(authResult.record.id, {
             expand: "organizations",
             requestKey: this.pb.authStore.token,
-        }) as UsersResponse & { expand: { organizations: OrganizationsResponse[] } };
-        const { expand: { organizations }, ...userRest } = user;
+        }) as UsersResponse<{ organizations: OrganizationsResponse[] }>;
+        const { expand, ...userRest } = user;
+        const organizations = expand?.organizations ?? []
 
         const lastDate = dayjs((await this.pb.collection('userItems').getList(1, 1, {
             filter: `user.id = "${user.id}"`,
             sort: "-updated",
             requestKey: this.pb.authStore.token,
-        })).items[0]?.updated ?? EARLY); // TODO: use user.lastActivity instead
+        })).items[0]?.updated ?? EARLY);
         const lastDateStr = lastDate.toISOString().replace("T", " ").replace("Z", "");
         const newItems = await this.pb.collection('publicItems').getFullList({
             filter: `updated >= "${lastDateStr}"`,
@@ -98,7 +99,7 @@ export class DBService {
         const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsResponse }>>(Object.assign({
             requestKey: this.pb.authStore.token,
             expand: "publicItem",
-        }, userId ? { filter: `user.id = "${userId}"` } : {})); // TODO: add pagination
+        }, userId ? { filter: `user.id = "${userId}"` } : {}));
         return Promise.all(items.map(async item => {
             const { expand, ...rest } = item;
             if (!expand) {
@@ -140,8 +141,31 @@ export class DBService {
         };
     }
 
-    public async updateItem(id: string, data: Partial<UserItemsResponse>) {
+    public async updateUserItem(id: string, data: Partial<UserItemsRecord>) {
         return await this.pb.collection('userItems').update(id, data, {
+            requestKey: this.pb.authStore.token + "#" + id,
+        });
+    }
+
+    public async updatePublicItem(id: string, data: Partial<PublicItemsRecord>) {
+        return await this.pb.collection('publicItems').update(id, data, {
+            requestKey: this.pb.authStore.token + "#" + id,
+        });
+    }
+
+    public async deleteUserItem(id: string) {
+        return await this.pb.collection('userItems').delete(id, {
+            requestKey: this.pb.authStore.token + "#" + id,
+        });
+    }
+
+    public async deletePublicItem(id: string) {
+        const userItems = await this.pb.collection('userItems').getFullList({
+            filter: `publicItem.id = "${id}"`,
+            requestKey: this.pb.authStore.token + "#" + id,
+        });
+        await Promise.all(userItems.map(item => this.deleteUserItem(item.id)));
+        return await this.pb.collection('publicItems').delete(id, {
             requestKey: this.pb.authStore.token + "#" + id,
         });
     }

@@ -10,7 +10,7 @@ import ViteExpress from "vite-express";
 import contract from './types/contract.js';
 import loggerService from './services/logger.mjs'
 import { LoginRoute, RegisterRoute, CheckUserRoute } from './routes/auth.mjs';
-import { CreateItemRoute, GetItemRoute, UpdateUserItemRoute } from './routes/items.mjs'
+import { CreateItemRoute, GetItemRoute, UpdateItemRoute, DeleteItemRoute } from './routes/items.mjs'
 import { ListSubjectsRoute } from './routes/subjects.mjs';
 import { ListOrganizationsRoute, EnterOrganizationRoute, GetProgressRoute } from './routes/organizations.mjs'
 
@@ -40,11 +40,14 @@ const router = server.router(contract, {
         list({ headers: { authorization } }) {
             return new GetItemRoute(authorization).getResponse();
         },
-        update({ headers: { authorization }, body: { id, progress } }) {
-            return new UpdateUserItemRoute(authorization, id, { progress }).getResponse();
+        update({ headers: { authorization }, body: { id, publicItem, userItem } }) {
+            return new UpdateItemRoute(authorization, id, publicItem, userItem).getResponse();
         },
         create({ headers: { authorization }, body: { publicItem, userItem } }) {
             return new CreateItemRoute(authorization, publicItem, userItem).getResponse();
+        },
+        delete({ headers: { authorization }, body: { id, type } }) {
+            return new DeleteItemRoute(authorization, id, type).getResponse();
         }
     },
     subjects: {
