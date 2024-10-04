@@ -43,7 +43,7 @@ const overallProgress = computed(() => {
 
 <template>
   <main class="py-4 px-12 gap-4">
-    <div class="flex flex-row grow gap-4">
+    <div class="flex grow gap-4">
       <section class="flex flex-col gap-8 items-center border-r border-r-slate-200">
         <div>
           <Table>

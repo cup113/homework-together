@@ -44,7 +44,10 @@ export const useShareStore = defineStore('share', () => {
 
     nextTick(() => {
         const store = useUserStore();
-        store.onChecked(() => setInterval(() => refreshProgress(), 1000 * 60 * 5));
+        store.onChecked(() => {
+            refreshProgress();
+            setInterval(() => refreshProgress(), 1000 * 60 * 3); // every 3 minutes
+        });
     });
 
     return {
