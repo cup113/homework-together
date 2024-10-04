@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { TableRow, TableCell } from '@/components/ui/table';
+import ProgressSlider from './ProgressSlider.vue';
 
 const props = defineProps<{
     rank: number;
@@ -11,7 +12,12 @@ const props = defineProps<{
 const rankString = computed(() => {
     const rank = props.rank.toString().padStart(2, '0');
     return `#${rank}`;
-})
+});
+
+const modelValue = computed({
+    get() { return [props.percentage]; },
+    set() {},
+});
 </script>
 
 <template>
@@ -19,8 +25,10 @@ const rankString = computed(() => {
         <TableCell>{{ rankString }}</TableCell>
         <TableCell>{{ name }}</TableCell>
         <TableCell>
-            <meter :value="percentage" min="0" max="100"></meter>
-            <span>{{ percentage.toFixed(2) }}%</span>
+            <div>
+                <ProgressSlider disabled v-model="modelValue" :min="0" :max="100"></ProgressSlider>
+                <span>{{ percentage.toFixed(2) }}%</span>
+            </div>
         </TableCell>
     </TableRow>
 </template>

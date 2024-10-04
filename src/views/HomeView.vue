@@ -6,10 +6,39 @@ import LeaderBoardItem from '@/components/LeaderBoardItem.vue';
 import ItemDisplay from '@/components/ItemDisplay.vue';
 import ItemAdd from '@/components/ItemAdd.vue';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCaption } from '@/components/ui/table';
+import ProgressSlider from '@/components/ProgressSlider.vue';
 import TableCell from '@/components/ui/table/TableCell.vue';
+import SubjectDisplay from '@/components/SubjectDisplay.vue';
+import { computed } from 'vue';
 
 const itemsStore = useItemsStore();
 const shareStore = useShareStore();
+
+const overallModel = computed({
+  get() { return [itemsStore.summary.done] },
+  set() { },
+});
+const overallProgress = computed(() => {
+  const userProgress = Object.entries(shareStore.sharedProgress.overall)
+    .map(([id, p]) => ({ id, progress: p[0] / p[1] }));
+  if (userProgress.length === 0) {
+    return {
+      max: undefined,
+      maxNames: [],
+      avg: undefined,
+    };
+  }
+  const max = Math.max.apply(null, userProgress.map(p => p.progress));
+  const maxNames = userProgress.filter(p => p.progress === max)
+    .map(p => shareStore.sharedProgress.users.find(u => u.id === p.id)?.name)
+    .filter(name => name !== undefined);
+  const avg = userProgress.reduce((acc, cur) => acc + cur.progress, 0) / userProgress.length;
+  return {
+    max,
+    maxName: maxNames.join(', '),
+    avg,
+  };
+})
 </script>
 
 <template>
@@ -26,20 +55,18 @@ const shareStore = useShareStore();
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="[id, subject] in itemsStore.subjectsSummary" :key="id">
-                <TableCell>{{ subject.name }}</TableCell>
-                <TableCell>
-                  <meter :value="subject.done" :max="subject.total"></meter>
-                  <span>{{ itemsStore.toHumanTime(subject.done) }} / {{ itemsStore.toHumanTime(subject.total) }}</span>
-                </TableCell>
-              </TableRow>
               <TableRow>
-                <TableCell>总计</TableCell>
+                <TableCell class="font-bold">总计</TableCell>
                 <TableCell>
-                  <meter :value="itemsStore.summary.done" :max="itemsStore.summary.total"></meter>
-                  <span>{{ itemsStore.toHumanTime(itemsStore.summary.done) }} / {{ itemsStore.toHumanTime(itemsStore.summary.total) }}</span>
+                  <ProgressSlider disabled v-model="overallModel" :max="itemsStore.summary.total"
+                    :max-progress="overallProgress.max" :max-name="overallProgress.maxName"
+                    :avg-progress="overallProgress.avg"></ProgressSlider>
+                  <span>{{ itemsStore.toHumanTime(itemsStore.summary.done) }} / {{
+                    itemsStore.toHumanTime(itemsStore.summary.total) }}</span>
                 </TableCell>
               </TableRow>
+              <SubjectDisplay v-for="subject in itemsStore.subjectsSummary" :key="subject[0]" :subject="subject[1]">
+              </SubjectDisplay>
             </TableBody>
           </Table>
         </div>
@@ -54,8 +81,8 @@ const shareStore = useShareStore();
               </TableRow>
             </TableHeader>
             <TableBody>
-              <LeaderBoardItem v-for="user in shareStore.rankedUsers" :key="user.id" :name="user.name ?? '...'" :rank="user.rank"
-                :percentage="user.done / user.total * 100"></LeaderBoardItem>
+              <LeaderBoardItem v-for="user in shareStore.rankedUsers" :key="user.id" :name="user.name ?? '...'"
+                :rank="user.rank" :percentage="user.done / user.total * 100"></LeaderBoardItem>
             </TableBody>
           </Table>
         </div>

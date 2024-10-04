@@ -5,10 +5,11 @@ import type { Item } from '../../types/contract';
 import { useDebounce } from '@vueuse/core';
 import { useItemsStore } from '@/stores/items';
 import { useUserStore } from '@/stores/user';
+import { useShareStore } from '@/stores/share';
 
 import MiniEditor from '@/components/MiniEditor.vue';
+import ProgressSlider from '@/components/ProgressSlider.vue';
 import { Icon } from '@iconify/vue';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from './ui/dropdown-menu';
@@ -19,11 +20,33 @@ const props = defineProps<{
 
 const itemsStore = useItemsStore();
 const userStore = useUserStore();
+const shareStore = useShareStore();
 
 const subject = computed(() => itemsStore.subjects.find(s => s.id === props.item.public.subject));
 const deadline = computed(() => dayjs(props.item.public.deadline).format("MM/DD HH:mm"));
 const progress = ref([props.item.progress * 100]);
 const debouncedProgress = useDebounce(progress, 500);
+const sharedProgress = computed(() => {
+    const userProgress = Object.entries(shareStore.sharedProgress.items[props.item.publicItem] ?? {})
+        .map(([uid, p]) => ({ uid, progress: p[0] / p[1] }));
+    if (userProgress.length === 0) {
+        return {
+            max: undefined,
+            maxNames: [],
+            avg: undefined,
+        };
+    }
+    const max = Math.max.apply(null, userProgress.map(p => p.progress));
+    const maxNames = userProgress.filter(p => p.progress === max)
+        .map(p => shareStore.sharedProgress.users.find(u => u.id === p.uid)?.name)
+        .filter(name => name !== undefined);
+    const avg = userProgress.reduce((acc, cur) => acc + cur.progress, 0) / userProgress.length;
+    return {
+        max,
+        maxName: maxNames.join(', '),
+        avg,
+    };
+});
 const description = ref(props.item.public.description);
 const note = ref(props.item.note);
 const etaMinutes = computed(() => (100 - progress.value[0]) * props.item.estimateMinutes / 100);
@@ -82,13 +105,15 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
                         </DropdownMenuLabel>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1" @click="itemsStore.deleteItem(item.id, 'user')">
-                            <Icon icon="material-symbols:delete-outline"/>删除（仅个人）
+                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1"
+                            @click="itemsStore.deleteItem(item.id, 'user')">
+                            <Icon icon="material-symbols:delete-outline" />删除（仅个人）
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                     </DropdownMenuItem>
                     <DropdownMenuItem v-if="permittedToDeletePublic">
-                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1" @click="itemsStore.deleteItem(item.publicItem, 'public')">
+                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1"
+                            @click="itemsStore.deleteItem(item.publicItem, 'public')">
                             <Icon icon="material-symbols:delete-outline" />删除（全体）
                         </DropdownMenuLabel>
                     </DropdownMenuItem>
@@ -96,7 +121,9 @@ const SHORTCUT_PROGRESSES = [100, 75, 50, 25, 0];
             </DropdownMenu>
             <div class="w-24 flex flex-col gap-1">
                 <div>
-                    <Slider v-model="progress" :min="0" :max="100" :step="1"></Slider>
+                    <ProgressSlider v-model="progress" :min="0" :max="100" :step="1"
+                    :max-progress="sharedProgress.max" :avg-progress="sharedProgress.avg" :max-name="sharedProgress.maxName">
+                    </ProgressSlider>
                 </div>
                 <div class="text-sm text-slate-700 text-center">{{ progress[0] }}% -{{
                     itemsStore.toHumanTime(etaMinutes) }}</div>

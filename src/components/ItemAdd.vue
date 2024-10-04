@@ -5,10 +5,10 @@ import { useItemsStore } from '@/stores/items';
 
 import { PublicItemsRangeOptions } from '@/../types/pocketbase-types';
 import MiniEditor from './MiniEditor.vue';
+import ProgressSlider from '@/components/ProgressSlider.vue';
 import { Select, SelectTrigger, SelectValue, SelectGroup, SelectContent, SelectItem } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
 import { useUserStore } from '@/stores/user';
 
 const itemsStore = useItemsStore();
@@ -56,7 +56,7 @@ function addItem() {
         <div class="flex flex-row gap-1 items-center">
             <div class="w-24 flex flex-col gap-1">
                 <div>
-                    <Slider v-model="progress" :min="0" :max="100" :step="1"></Slider>
+                    <ProgressSlider v-model="progress" :min="0" :max="100" :step="1"></ProgressSlider>
                 </div>
                 <div class="text-sm text-slate-700 text-center">{{ progress[0] }}%</div>
             </div>

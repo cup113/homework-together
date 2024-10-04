@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia';
-import { reactive, computed, nextTick } from 'vue';
+import { ref, reactive, computed, nextTick } from 'vue';
 import { useNetworkStore } from './network';
 import { useUserStore } from './user';
-import type { SharedProgress } from 'types/contract';
+import type { SharedProgress } from '@/../types/contract';
+import dayjs from 'dayjs';
 
 export const useShareStore = defineStore('share', () => {
     const sharedProgress = reactive<SharedProgress>({
@@ -11,6 +12,7 @@ export const useShareStore = defineStore('share', () => {
         overall: {},
         users: [],
     });
+    const lastUpdated = ref(dayjs().subtract(1, 'hour')); // to enable first update
 
     const rankedUsers = computed(() => {
         return Object.entries(sharedProgress.overall)
@@ -24,6 +26,9 @@ export const useShareStore = defineStore('share', () => {
     });
 
     async function refreshProgress() {
+        if (dayjs().diff(lastUpdated.value, 'minute') < 1) {
+            return;
+        }
         const network = useNetworkStore();
         const progress = await network.client.organizations.progress.query();
         if (progress.status === 200) {
@@ -39,10 +44,12 @@ export const useShareStore = defineStore('share', () => {
 
     nextTick(() => {
         const store = useUserStore();
-        store.onChecked(refreshProgress);
+        store.onChecked(() => setInterval(() => refreshProgress(), 1000 * 60 * 5));
     });
 
     return {
         rankedUsers,
+        sharedProgress,
+        refreshProgress,
     }
 });

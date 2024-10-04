@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { useLocalStorage } from '@vueuse/core'
 import { useNetworkStore } from './network';
 import { Sha256 } from '@aws-crypto/sha256-js';
-import type { OrganizationsResponse } from 'types/pocketbase-types';
+import type { OrganizationsResponse } from '@/../types/pocketbase-types';
 
 const initialUser = () => ({
   id: '',

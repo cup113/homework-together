@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { nextTick, computed, ref } from "vue";
 import { useUserStore } from "./user";
 import { useNetworkStore } from './network';
+import { useShareStore } from "./share";
 import type { Item, RawPublicItem, RawUserItem, Subject } from '@/../types/contract';
 
 export const useItemsStore = defineStore("items", () => {
@@ -98,6 +99,8 @@ export const useItemsStore = defineStore("items", () => {
                 return;
             }
             item.progress = progress;
+            const shareStore = useShareStore();
+            shareStore.refreshProgress();
         } else {
             console.error(response.status);
             alert("Failed to update progress");

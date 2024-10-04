@@ -20,8 +20,8 @@ Do homework together with your friends!
 - [x] Add Leaderboard
 - [x] Delete Item (Public / User)
 - [ ] Update Item (Refactor to diff system)
-- [ ] Poll progress (every 2 minutes / updated)
-- [ ] Add progress display (Refactor slide)
+- [x] Poll progress (every 2 minutes / updated)
+- [x] Add progress display (Refactor slide)
 
 ### Phase 3: Critical Features
 
@@ -37,6 +37,7 @@ Do homework together with your friends!
 - [ ] Add loading animation
 - [ ] Undo & Redo System
 - [ ] Handle Errors
+- [ ] Increment progress update to save bandwidth
 - [ ] Add leaderboard pagination
 - [ ] Add organization pagination
 
