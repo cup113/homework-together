@@ -50,7 +50,7 @@ function addItem() {
 </script>
 
 <template>
-    <div class="rounded-lg hover:bg-slate-50 px-2">
+    <div class="rounded-lg hover:bg-slate-50 px-2 mb-3">
         <div class="flex flex-row gap-2 items-center">
             <div class="flex flex-col gap-2 flex-grow">
                 <div class="flex items-center">

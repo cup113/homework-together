@@ -44,8 +44,8 @@ const overallProgress = computed(() => {
 
 <template>
   <main class="py-4 px-4 sm:px-8 lg:px-12 gap-4">
-    <div class="flex grow gap-4">
-      <section class="flex flex-col gap-8 items-center border-r border-r-slate-200">
+    <div class="flex justify-center">
+      <section class="flex flex-col gap-8 items-center border-r border-r-slate-200 pr-2 mr-4">
         <div>
           <Table>
             <TableCaption>个人进度</TableCaption>
@@ -89,7 +89,7 @@ const overallProgress = computed(() => {
         </div>
       </section>
       <section>
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col">
           <ItemAdd></ItemAdd>
           <ItemDisplay v-for="item, i in itemsStore.itemsSorted" :key="item.id" :item="item" :index="i"></ItemDisplay>
         </div>

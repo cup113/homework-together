@@ -7,10 +7,12 @@ const userStore = useUserStore();
 </script>
 
 <template>
-    <NavigationMenu class="px-6 py-2 flex gap-2">
+    <NavigationMenu class="px-6 py-2 flex gap-2 mx-auto">
         <div class="flex gap-2 items-center">
             <img src="/favicon.ico" alt="logo" width="24" />
-            <h1 class="font-bold text-lg">Homework Together</h1>
+            <h1 class="font-bold text-lg">
+                <RouterLink to="/">Homework Together</RouterLink>
+            </h1>
         </div>
         <NavigationMenuList class="text-slate-500">
             <NavigationMenuItem>

@@ -79,8 +79,9 @@ def run_express_server(node_env: str = "development"):
 
 def run_nginx():
     NGINX = "/usr/sbin/nginx" if platform == 'linux' else which("nginx")
+    assert NGINX is not None, "NGINX not found"
     all_wait(general_popen(NGINX, "-s", "stop", cwd=ROOT / "nginx"))
-    return all_wait(general_popen(NGINX, "-p", ".", "-c", "./conf/nginx.conf", cwd=ROOT / "nginx"))
+    all_wait(general_popen(NGINX, "-p", ".", "-c", "./conf/nginx.conf", cwd=ROOT / "nginx"))
 
 
 
@@ -113,7 +114,7 @@ def main():
     else:
         processes = list(run_express_server("production" if args.production else "development"))
         if args.production:
-            processes.append(run_nginx())
+            run_nginx()
         try:
             all_wait(*processes)
         except KeyboardInterrupt:

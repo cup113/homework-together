@@ -91,13 +91,15 @@ watch([debouncedProgress, debouncedUserEstimate], () => {
 </script>
 
 <template>
-    <div class="rounded-lg hover:bg-slate-50 px-3 shadow-md pt-2 flex flex-col">
-        <div class="flex gap-2 items-center">
+    <div class="rounded-lg hover:bg-slate-50 px-3 pt-1 border-t border-slate-300 flex flex-col">
+        <div class="flex w-full gap-2 items-center">
             <span class="text-sm font-bold text-slate-500">{{ index }}</span>
             <Badge class="flex flex-row items-center h-6 font-mono">
                 <div>{{ subject?.abbr }}</div>
             </Badge>
-            <MiniEditor v-model="description" placeholder="请输入公开内容/描述"></MiniEditor>
+            <div class="flex-grow">
+                <MiniEditor v-model="description" placeholder="请输入公开内容/描述"></MiniEditor>
+            </div>
         </div>
         <div class="flex w-full gap-1 items-center mt-1">
             <div class="flex-grow">
@@ -106,7 +108,7 @@ watch([debouncedProgress, debouncedUserEstimate], () => {
                 </ProgressSlider>
             </div>
             <div class="text-xs text-slate-700 text-center font-mono font-bold w-20">
-                {{ progress[0] }}% -{{ itemsStore.toHumanTime(etaMinutes) }}</div>
+                {{ progress[0].toFixed(0) }}% -{{ itemsStore.toHumanTime(etaMinutes) }}</div>
             <div>
                 <Button class="h-4 px-1 py-1" @click="updateProgress(100)">
                     <Icon icon="charm:square-tick" />
@@ -114,9 +116,6 @@ watch([debouncedProgress, debouncedUserEstimate], () => {
             </div>
         </div>
         <div class="flex gap-1 items-center justify-around">
-            <Badge v-if="organizationName" variant="secondary" class="flex flex-row items-center h-6">
-                <div>{{ organizationName }}</div>
-            </Badge>
             <Badge class="h-5" variant="outline">
                 <Icon icon="tabler:tag-filled"></Icon> {{ range }}
             </Badge>
@@ -128,7 +127,8 @@ watch([debouncedProgress, debouncedUserEstimate], () => {
                 <Icon icon="hugeicons:estimate-02"></Icon>
                 <Popover>
                     <PopoverTrigger>
-                        <div class="font-bold border border-amber-500 border-dashed hover:bg-amber-300 active:bg-amber-400 rounded-md px-1">
+                        <div
+                            class="font-bold border border-amber-500 border-dashed hover:bg-amber-300 active:bg-amber-400 rounded-md px-1">
                             {{ itemsStore.toHumanTime(item.estimateMinutes) }}</div>
                     </PopoverTrigger>
                     <PopoverContent>
@@ -149,6 +149,11 @@ watch([debouncedProgress, debouncedUserEstimate], () => {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent class="flex flex-col">
+                    <DropdownMenuItem>
+                        <DropdownMenuLabel class="">
+                            <div>归属：{{ organizationName }}</div>
+                        </DropdownMenuLabel>
+                    </DropdownMenuItem>
                     <DropdownMenuItem>
                         <DropdownMenuLabel class="text-red-500 flex items-center gap-1"
                             @click="itemsStore.deleteItem(item.id, 'user')">
