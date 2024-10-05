@@ -5,7 +5,6 @@ import { useItemsStore } from '@/stores/items';
 
 import { PublicItemsRangeOptions } from '@/../types/pocketbase-types';
 import MiniEditor from './MiniEditor.vue';
-import ProgressSlider from '@/components/ProgressSlider.vue';
 import { Select, SelectTrigger, SelectValue, SelectGroup, SelectContent, SelectItem } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +16,6 @@ const subject = ref(undefined as string | undefined);
 const description = ref('<p></p>');
 const note = ref('<p></p>');
 const range = ref(PublicItemsRangeOptions.all);
-const progress = ref([0]);
 const publicMinutes = ref(0);
 const userMinutes = ref(0);
 const deadline = ref(dayjs().format("YYYY-MM-DD" + "T" + "23:59"));
@@ -45,7 +43,7 @@ function addItem() {
         deadline: dayjs(deadline.value).toISOString(),
     }, {
         note: note.value,
-        progress: progress.value[0],
+        progress: 0,
         estimateMinutes: userMinutes.value,
     });
 }
@@ -53,17 +51,11 @@ function addItem() {
 
 <template>
     <div class="rounded-lg hover:bg-slate-50 px-2">
-        <div class="flex flex-row gap-1 items-center">
-            <div class="w-24 flex flex-col gap-1">
-                <div>
-                    <ProgressSlider v-model="progress" :min="0" :max="100" :step="1"></ProgressSlider>
-                </div>
-                <div class="text-sm text-slate-700 text-center">{{ progress[0] }}%</div>
-            </div>
-            <div class="flex flex-col w-96">
-                <div class="flex gap-1 items-center">
+        <div class="flex flex-row gap-2 items-center">
+            <div class="flex flex-col gap-2 flex-grow">
+                <div class="flex items-center">
                     <Select v-model="subject">
-                        <SelectTrigger class="w-20 py-0 h-8">
+                        <SelectTrigger class="w-20 h-8">
                             <SelectValue placeholder="学科..."></SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -76,10 +68,9 @@ function addItem() {
                     </Select>
                     <MiniEditor v-model="description" placeholder="公开内容/描述"></MiniEditor>
                 </div>
-                <hr>
                 <div class="flex items-center">
                     <Select v-model="range">
-                        <SelectTrigger class="w-20 h-8">
+                        <SelectTrigger class="w-20 h-7">
                             <SelectValue placeholder="Range..."></SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -92,17 +83,21 @@ function addItem() {
                     </Select>
                     <MiniEditor v-model="note" class="text-slate-500 text-xs" placeholder="备注"></MiniEditor>
                 </div>
-            </div>
-            <div class="flex gap-1 items-center">
-                <div>
-                    <div class="flex items-center"><span class="w-12">公开</span><Input class="px-2 w-20" type="number"
-                            min="0" step="1" v-model="publicMinutes" /></div>
-                    <div class="flex items-center"><span class="w-12">个人</span><Input class="px-2 w-20" type="number"
-                            min="0" step="1" v-model="userMinutes" /></div>
+                <div class="flex items-center gap-1 text-sm">
+                    <span>时间期限</span>
+                    <Input type="datetime-local" v-model="deadline" class="w-48 h-7" />
                 </div>
             </div>
-            <Input type="datetime-local" v-model="deadline" class="w-48" />
-            <Button @click="addItem()">添加</Button>
+            <div class="flex flex-col gap-1 text-sm items-center flex-grow">
+                <div>预估时间 (min):</div>
+                <div class="flex items-center gap-1"><span>公开</span><Input class="px-2 h-8 w-16" type="number"
+                        min="0" step="1" v-model="publicMinutes" /></div>
+                <div class="flex items-center gap-1"><span>个人</span><Input class="px-2 w-16 h-8" type="number"
+                        min="0" step="1" v-model="userMinutes" /></div>
+            </div>
+            <div>
+                <Button @click="addItem()" class="bg-blue-500 hover:bg-blue-600 active:bg-blue-700">添加</Button>
+            </div>
         </div>
     </div>
 </template>

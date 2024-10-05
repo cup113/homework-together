@@ -4,6 +4,7 @@ import { useUserStore } from "./user";
 import { useNetworkStore } from './network';
 import { useShareStore } from "./share";
 import type { Item, RawPublicItem, RawUserItem, Subject } from '@/../types/contract';
+import dayjs from "dayjs";
 
 export const useItemsStore = defineStore("items", () => {
     const items = ref(new Array<Item>());
@@ -52,6 +53,7 @@ export const useItemsStore = defineStore("items", () => {
             return a.public.description.localeCompare(b.public.description);
         });
     });
+    const latestDeleteTime = ref(dayjs().subtract(1, 'hour'));
 
     function toHumanTime(minutes: number) {
         const h = Math.floor(minutes / 60);
@@ -82,13 +84,14 @@ export const useItemsStore = defineStore("items", () => {
         }
     }
 
-    async function updateProgress(itemId: string, progress: number) {
+    async function updateItem(itemId: string, progress: number, userEstimate: number) {
         const networkStore = useNetworkStore();
         const response = await networkStore.client.items.update.mutation({
             body: {
                 userItem: {
                     id: itemId,
                     progress,
+                    estimateMinutes: userEstimate,
                 },
             }
         });
@@ -99,6 +102,7 @@ export const useItemsStore = defineStore("items", () => {
                 return;
             }
             item.progress = progress;
+            item.estimateMinutes = userEstimate;
             const shareStore = useShareStore();
             shareStore.refreshProgress();
         } else {
@@ -117,6 +121,8 @@ export const useItemsStore = defineStore("items", () => {
         });
         if (response.status === 200) {
             items.value.push(response.body);
+                        const shareStore = useShareStore();
+            shareStore.refreshProgress();
         } else {
             console.error(response.status);
             alert("Failed to add item");
@@ -124,6 +130,12 @@ export const useItemsStore = defineStore("items", () => {
     }
 
     async function deleteItem(itemId: string, type: 'public' | 'user') {
+        if (dayjs().diff(latestDeleteTime.value, 'minutes') > 1) {
+            const text = `你确定要删除此项目(ID: ${itemId})吗？` + (type === 'public' ? '所有人的进度都会被删除。' : '');
+            if (!confirm(text)) {
+                return;
+            }
+        }
         const network = useNetworkStore();
         const response = await network.client.items.delete.mutation({
             body: {
@@ -135,6 +147,7 @@ export const useItemsStore = defineStore("items", () => {
             const index = items.value.findIndex(item => (type === 'public' ? item.publicItem === itemId : item.id === itemId));
             if (index >= 0) {
                 items.value.splice(index, 1);
+                latestDeleteTime.value = dayjs();
             } else {
                 console.error(`Item ${itemId} not found`);
             }
@@ -164,6 +177,6 @@ export const useItemsStore = defineStore("items", () => {
         deleteItem,
         refreshItems,
         refreshSubjects,
-        updateProgress,
+        updateItem,
     };
 });

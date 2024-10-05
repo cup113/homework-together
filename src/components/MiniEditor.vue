@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { StarterKit } from '@tiptap/starter-kit';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
+import { cn } from '@/lib/utils';
 import Placeholder from '@tiptap/extension-placeholder';
 
 const model = defineModel<string>({
@@ -10,6 +11,7 @@ const model = defineModel<string>({
 
 const props = defineProps<{
     placeholder: string;
+    class?: string;
 }>()
 
 const editor = useEditor({
@@ -25,7 +27,8 @@ const css = computed(() => ({ '--placeholder-text': `"${props.placeholder}"` }))
 
 <template>
     <div :style="css">
-        <EditorContent :editor="editor" class="py-1 px-2 [&_.ProseMirror]:outline-0 min-w-40"></EditorContent>
+        <EditorContent :editor="editor" :class="cn('py-1 px-2 [&_.ProseMirror]:outline-0', props.class)">
+        </EditorContent>
     </div>
 </template>
 

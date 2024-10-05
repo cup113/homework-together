@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+
 import { useItemsStore } from '@/stores/items';
 import { useShareStore } from '@/stores/share';
 
@@ -9,7 +11,6 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCaption } from
 import ProgressSlider from '@/components/ProgressSlider.vue';
 import TableCell from '@/components/ui/table/TableCell.vue';
 import SubjectDisplay from '@/components/SubjectDisplay.vue';
-import { computed } from 'vue';
 
 const itemsStore = useItemsStore();
 const shareStore = useShareStore();
@@ -38,11 +39,11 @@ const overallProgress = computed(() => {
     maxName: maxNames.join(', '),
     avg,
   };
-})
+});
 </script>
 
 <template>
-  <main class="py-4 px-12 gap-4">
+  <main class="py-4 px-4 sm:px-8 lg:px-12 gap-4">
     <div class="flex grow gap-4">
       <section class="flex flex-col gap-8 items-center border-r border-r-slate-200">
         <div>
@@ -80,7 +81,7 @@ const overallProgress = computed(() => {
                 <TableHead>完成度</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody class="relative">
               <LeaderBoardItem v-for="user in shareStore.rankedUsers" :key="user.id" :name="user.name ?? '...'"
                 :rank="user.rank" :percentage="user.done / user.total * 100"></LeaderBoardItem>
             </TableBody>
@@ -90,7 +91,7 @@ const overallProgress = computed(() => {
       <section>
         <div class="flex flex-col gap-1">
           <ItemAdd></ItemAdd>
-          <ItemDisplay v-for="item in itemsStore.itemsSorted" :key="item.id" :item="item"></ItemDisplay>
+          <ItemDisplay v-for="item, i in itemsStore.itemsSorted" :key="item.id" :item="item" :index="i"></ItemDisplay>
         </div>
       </section>
     </div>

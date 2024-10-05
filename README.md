@@ -26,26 +26,29 @@ Do homework together with your friends!
 ### Phase 3: Critical Features
 
 - [ ] Add Activity Mark
-- [ ] Add Daily Reset
-- [ ] Add pagination in homework list
+- [ ] Add "Delete outdated"
+- [ ] Socket.io Progress update
+- [ ] Add snap points feature
+- [ ] Refactor UI, turn progress to separator
+- [ ] Delete Item Confirmation
 
 ### Phase 4: Polish Details
 
-- [ ] Delete Item Confirmation
 - [ ] Attach item to organization
 - [ ] Add organization registration
 - [ ] Add loading animation
 - [ ] Undo & Redo System
 - [ ] Handle Errors
-- [ ] Increment progress update to save bandwidth
+- [ ] Add pagination in homework list
 - [ ] Add leaderboard pagination
 - [ ] Add organization pagination
+- [ ] Responsive design
 
 ### Phase 5: Features
 
 - [ ] Add customization
 - [ ] Updated Item: Organization, range, publicEstimate
-- [ ] Add user management (find password, etc.)
+- [ ] Add user management (email registration, reset password, etc.)
 - [ ] Add Subject belonging to organization
 - [ ] Add Goal system
 - [ ] Add organization entry verification
