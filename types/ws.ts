@@ -1,6 +1,6 @@
 import type { Server } from "socket.io";
 import type { Socket } from 'socket.io-client';
-import { UsersResponse } from "./pocketbase-types.js";
+import type { UsersResponse } from "./pocketbase-types.js";
 
 export interface ProgressChange {
     itemId: string;

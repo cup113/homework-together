@@ -136,7 +136,7 @@ watch(debouncedPublicItem, publicItem => {
         <div class="flex w-full gap-1 items-center mt-1">
             <div class="flex-grow">
                 <ProgressSlider v-model="progress" :min="0" :max="100" :step="1" :max-progress="sharedProgress.max"
-                    :avg-progress="sharedProgress.avg" :max-name="sharedProgress.maxName" :disabled="!permittedPublic">
+                    :avg-progress="sharedProgress.avg" :max-name="sharedProgress.maxName">
                 </ProgressSlider>
             </div>
             <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">
