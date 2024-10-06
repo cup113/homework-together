@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type HTMLAttributes, computed } from 'vue'
+import { type HTMLAttributes, computed, watch } from 'vue'
 
 import type { SliderRootEmits, SliderRootProps } from 'radix-vue'
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack, useForwardPropsEmits } from 'radix-vue'
@@ -15,7 +15,12 @@ const props = defineProps<SliderRootProps & { class?: HTMLAttributes['class'] } 
   maxProgress?: number;
   maxName?: string;
   avgProgress?: number;
+  snapPoints?: number[];
 }>()
+const DEFAULT_SNAP_POINTS = [0, 20, 40, 50, 60, 80, 90, 95, 100];
+
+const snapPoints = computed(() => props.snapPoints ?? (props.disabled ? [] : DEFAULT_SNAP_POINTS));
+
 const emits = defineEmits<SliderRootEmits>()
 const thumbs = computed(() => props.disabled ? [] : props.modelValue);
 
@@ -46,6 +51,19 @@ const currentPercentage = computed(() => {
 const delegatedProps = computed(() => omit(props, ['class']))
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+
+watch(() => props.modelValue, newValue => {
+  if (newValue === undefined) {
+    return;
+  }
+  const nearSnapPoint = snapPoints.value
+    .map(snapPoint => ({ value: snapPoint, diff: Math.abs(newValue[0] - snapPoint) }))
+    .filter(snapPoint => snapPoint.diff <= 3)
+    .sort((a, b) => a.diff - b.diff)[0];
+  if (nearSnapPoint && nearSnapPoint.value !== newValue[0]) {
+    emits('update:modelValue', [nearSnapPoint.value]);
+  }
+})
 </script>
 
 <template>
@@ -66,6 +84,8 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     )" v-bind="forwarded">
       <SliderTrack class="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
         <SliderRange class="absolute h-full bg-lime-800" :class="{ 'progress-transition': disabled }" />
+        <span v-for="snapPoint in snapPoints" :key="snapPoint" class="absolute block h-full bg-slate-500 opacity-20"
+          :style="{ width: '1px', left: `calc(${snapPoint}% - 1px)` }"></span>
         <span class="absolute block h-full bg-amber-500 opacity-70 progress-transition" :style="avgStyle"></span>
         <span class="absolute block h-full bg-cyan-500 opacity-70 progress-transition" :style="maxStyle"></span>
       </SliderTrack>

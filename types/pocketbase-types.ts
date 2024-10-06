@@ -56,6 +56,7 @@ export type PublicItemsRecord = {
 	estimateMinutes: number
 	organization?: RecordIdString
 	range: PublicItemsRangeOptions
+	snaps?: string
 	subject: RecordIdString
 }
 
@@ -75,7 +76,7 @@ export type UserItemsRecord = {
 export type UsersRecord = {
 	avatar?: string
 	goal?: IsoDateString
-	lastActive?: IsoDateString
+	lastCheck?: IsoDateString
 	name?: string
 	organizations?: RecordIdString[]
 }

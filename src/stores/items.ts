@@ -3,7 +3,7 @@ import { nextTick, computed, ref } from "vue";
 import { useUserStore } from "./user";
 import { useNetworkStore } from './network';
 import { useShareStore } from "./share";
-import type { Item, RawPublicItem, RawUserItem, Subject } from '@/../types/contract';
+import type { Item, ItemsUpdate, RawPublicItem, RawUserItem, Subject } from '@/../types/contract';
 import dayjs from "dayjs";
 
 export const useItemsStore = defineStore("items", () => {
@@ -84,27 +84,40 @@ export const useItemsStore = defineStore("items", () => {
         }
     }
 
-    async function updateItem(itemId: string, progress: number, userEstimate: number) {
+    async function updateItem(item: ItemsUpdate) {
         const networkStore = useNetworkStore();
         const response = await networkStore.client.items.update.mutation({
-            body: {
-                userItem: {
-                    id: itemId,
-                    progress,
-                    estimateMinutes: userEstimate,
-                },
-            }
+            body: item,
         });
         if (response.status === 200) {
-            const item = items.value.find(item => item.id === itemId);
-            if (!item) {
-                console.error(`Item ${itemId} not found`);
-                return;
+            const userItem = item.userItem;
+            const publicItem = item.publicItem;
+            if (userItem) {
+                const index = items.value.findIndex(i => i.id === userItem.id);
+                if (index >= 0) {
+                    if (userItem.progress !== undefined) {
+                        items.value[index].progress = userItem.progress;
+                    }
+                    if (userItem.estimateMinutes !== undefined) {
+                        items.value[index].estimateMinutes = userItem.estimateMinutes;
+                    }
+                } else {
+                    console.error(`Item ${userItem.id} not found`);
+                }
             }
-            item.progress = progress;
-            item.estimateMinutes = userEstimate;
-            const shareStore = useShareStore();
-            shareStore.refreshProgress();
+            if (publicItem) {
+                const index = items.value.findIndex(i => i.publicItem === publicItem.id);
+                if (index >= 0) {
+                    if (publicItem.description !== undefined) {
+                        items.value[index].public.description = publicItem.description;
+                    }
+                    if (publicItem.deadline !== undefined) {
+                        items.value[index].public.deadline = publicItem.deadline;
+                    }
+                } else {
+                    console.error(`Item ${publicItem.id} not found`);
+                }
+            }
         } else {
             console.error(response.status);
             alert("Failed to update progress");
@@ -121,7 +134,7 @@ export const useItemsStore = defineStore("items", () => {
         });
         if (response.status === 200) {
             items.value.push(response.body);
-                        const shareStore = useShareStore();
+            const shareStore = useShareStore();
             shareStore.refreshProgress();
         } else {
             console.error(response.status);
@@ -129,9 +142,9 @@ export const useItemsStore = defineStore("items", () => {
         }
     }
 
-    async function deleteItem(itemId: string, type: 'public' | 'user') {
+    async function deleteItems(ids: string[], type: 'public' | 'user') {
         if (dayjs().diff(latestDeleteTime.value, 'minutes') > 1) {
-            const text = `你确定要删除此项目(ID: ${itemId})吗？` + (type === 'public' ? '所有人的进度都会被删除。' : '');
+            const text = `你确定要删除此项目(ID: ${ids.join(', ')})吗？` + (type === 'public' ? '所有人的进度都会被删除。' : '');
             if (!confirm(text)) {
                 return;
             }
@@ -139,22 +152,35 @@ export const useItemsStore = defineStore("items", () => {
         const network = useNetworkStore();
         const response = await network.client.items.delete.mutation({
             body: {
-                id: itemId,
+                ids: ids,
                 type,
             }
         });
         if (response.status === 200) {
-            const index = items.value.findIndex(item => (type === 'public' ? item.publicItem === itemId : item.id === itemId));
-            if (index >= 0) {
-                items.value.splice(index, 1);
-                latestDeleteTime.value = dayjs();
-            } else {
-                console.error(`Item ${itemId} not found`);
-            }
+            ids.forEach(itemId => {
+                const index = items.value.findIndex(item => (type === 'public' ? item.publicItem : item.id) === itemId);
+                if (index >= 0) {
+                    items.value.splice(index, 1);
+                    latestDeleteTime.value = dayjs();
+                    const shareStore = useShareStore();
+                    shareStore.refreshProgress();
+                } else {
+                    console.error(`Item ${itemId} not found`);
+                }
+            });
         } else {
             console.error(response.status);
             alert("Failed to delete item");
         }
+    }
+
+    async function deleteOutdated(type: 'public' | 'user') {
+        const outdatedItems = items.value.filter(item => {
+            const deadline = item.public.deadline;
+            if (!deadline) { return false; }
+            return dayjs().isAfter(dayjs(deadline));
+        });
+        await deleteItems(outdatedItems.map(item => (type === 'public' ? item.publicItem : item.id)), type);
     }
 
     nextTick(() => {
@@ -174,7 +200,8 @@ export const useItemsStore = defineStore("items", () => {
         summary,
         toHumanTime,
         addItem,
-        deleteItem,
+        deleteItems,
+        deleteOutdated,
         refreshItems,
         refreshSubjects,
         updateItem,

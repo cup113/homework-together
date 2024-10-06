@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useThrottle } from '@vueuse/core';
 import { useUserStore } from '@/stores/user';
 import router from '@/router/index';
 
@@ -14,6 +15,8 @@ const userStore = useUserStore();
 const username = ref(userStore.user.username);
 const password = ref('');
 const passwordConfirm = ref('');
+const organizationName = ref('');
+const throttledOrganizationName = useThrottle(organizationName, 500);
 
 async function login() {
     await userStore.login(username.value, password.value);
@@ -37,6 +40,10 @@ async function register() {
 async function join_organization(organizationId: string) {
     await userStore.join_organization(organizationId);
 }
+
+watch(throttledOrganizationName, async value => {
+    await userStore.query_organizations(value);
+})
 
 </script>
 
@@ -109,6 +116,7 @@ async function join_organization(organizationId: string) {
                         <CardTitle>Organization</CardTitle>
                     </CardHeader>
                     <CardContent>
+                        <Input type="text" name="organization" placeholder="请输入组织名称" v-model="organizationName" class="mb-2" />
                         <div v-for="organization in userStore.organizations" :key="organization.id"
                             class="flex items-center gap-2">
                             <div>{{ organization.name }}</div>

@@ -10,6 +10,10 @@ export class DBService {
         this.pb = new Client("http://localhost:8090");
     }
 
+    protected sanitize(str: string) {
+        return str.replace(/["\\]/g, "");
+    }
+
     public async authWithToken(token: string) {
         this.pb.authStore.save(token);
         const auth = await this.pb.collection('users').authRefresh();
@@ -38,8 +42,10 @@ export class DBService {
         return await this.pb.collection('users').getFullList();
     }
 
-    public async listOrganizations(): Promise<OrganizationsResponse[]> {
-        return await this.pb.collection('organizations').getFullList();
+    public async queryOrganization(keyword: string): Promise<OrganizationsResponse[]> {
+        return await this.pb.collection('organizations').getFullList({
+            filter: `name = "${this.sanitize(keyword)}"`
+        });
     }
 
     public async enterOrganization(userId: string, organizationId: string) {
@@ -65,20 +71,14 @@ export class DBService {
         }
         const user = await this.pb.collection('users').getOne(authResult.record.id, {
             expand: "organizations",
-            requestKey: this.pb.authStore.token,
         }) as UsersResponse<{ organizations: OrganizationsResponse[] }>;
         const { expand, ...userRest } = user;
-        const organizations = expand?.organizations ?? []
+        const organizations = expand?.organizations ?? [];
 
-        const lastDate = dayjs((await this.pb.collection('userItems').getList(1, 1, {
-            filter: `user.id = "${user.id}"`,
-            sort: "-updated",
-            requestKey: this.pb.authStore.token,
-        })).items[0]?.updated ?? EARLY);
+        const lastDate = dayjs(user.lastCheck ?? EARLY);
         const lastDateStr = lastDate.toISOString().replace("T", " ").replace("Z", "");
         const newItems = await this.pb.collection('publicItems').getFullList({
-            filter: `updated >= "${lastDateStr}"`,
-            requestKey: this.pb.authStore.token,
+            filter: `updated >= "${lastDateStr}" && author.id != "${user.id}"`,
         });
         await Promise.all(newItems.map(async item => {
             this.pb.collection('userItems').create({
@@ -87,6 +87,9 @@ export class DBService {
                 estimateMinutes: item.estimateMinutes,
             } satisfies UserItemsRecord, { requestKey: null });
         }));
+        await this.pb.collection('users').update(user.id, {
+            lastCheck: dayjs().toISOString(),
+        });
 
         return {
             ...userRest,
@@ -97,7 +100,6 @@ export class DBService {
 
     public async getUserItems(userId?: string): Promise<Item[]> {
         const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsResponse }>>(Object.assign({
-            requestKey: this.pb.authStore.token,
             expand: "publicItem",
         }, userId ? { filter: `user.id = "${userId}"` } : {}));
         return Promise.all(items.map(async item => {
@@ -117,15 +119,13 @@ export class DBService {
         const publicResult = await this.pb.collection('publicItems').create({
             ...publicItem,
             author: userId,
-        }, {
-            requestKey: this.pb.authStore.token,
         });
         const userResult = await this.pb.collection('userItems').create({
             ...userItem,
             publicItem: publicResult.id,
             user: userId,
         }, {
-            requestKey: this.pb.authStore.token + publicItem.description,
+            requestKey: publicItem.description,
         });
         return {
             ...userResult,
@@ -133,33 +133,41 @@ export class DBService {
         };
     }
 
-    public async updateUserItem(id: string, data: Partial<UserItemsRecord>) {
+    public async updateUserItem(id: string, data: Partial<UserItemsRecord>): Promise<UserItemsResponse<{ publicItem: PublicItemsResponse }>> {
         return await this.pb.collection('userItems').update(id, data, {
-            requestKey: this.pb.authStore.token + "#" + id,
+            requestKey: id,
+            expand: "publicItem",
         });
     }
 
     public async updatePublicItem(id: string, data: Partial<PublicItemsRecord>) {
         return await this.pb.collection('publicItems').update(id, data, {
-            requestKey: this.pb.authStore.token + "#" + id,
+            requestKey: id,
         });
     }
 
     public async deleteUserItem(id: string) {
         return await this.pb.collection('userItems').delete(id, {
-            requestKey: this.pb.authStore.token + "#" + id,
+            requestKey: id,
         });
     }
 
     public async deletePublicItem(id: string) {
         const userItems = await this.pb.collection('userItems').getFullList({
             filter: `publicItem.id = "${id}"`,
-            requestKey: this.pb.authStore.token + "#" + id,
+            requestKey: id,
         });
         await Promise.all(userItems.map(item => this.deleteUserItem(item.id)));
-        return await this.pb.collection('publicItems').delete(id, {
-            requestKey: this.pb.authStore.token + "#" + id,
+        const item = await this.pb.collection('publicItems').getOne(id, {
+            requestKey: id,
         });
+        await this.pb.collection('publicItems').delete(id, {
+            requestKey: id,
+        });
+        return {
+            id,
+            organization: item.organization
+        };
     }
 
     public async listSubjects() {

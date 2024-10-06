@@ -25,11 +25,10 @@ const itemsStore = useItemsStore();
 const userStore = useUserStore();
 const shareStore = useShareStore();
 
+// Source
 const index = computed(() => (props.index + 1).toString().padStart(2, '0'));
 const subject = computed(() => itemsStore.subjects.find(s => s.id === props.item.public.subject));
-const deadline = computed(() => dayjs(props.item.public.deadline).format("MM/DD HH:mm"));
-const progress = ref([props.item.progress * 100]); // TODO this can't be updated from outside
-const debouncedProgress = useDebounce(progress, 500);
+const deadline = computed(() => props.item.public.deadline ? dayjs(props.item.public.deadline).format("MM/DD HH:mm") : undefined);
 const sharedProgress = computed(() => {
     const userProgress = Object.entries(shareStore.sharedProgress.items[props.item.publicItem] ?? {})
         .map(([uid, p]) => ({ uid, progress: p[0] / p[1] }));
@@ -51,25 +50,28 @@ const sharedProgress = computed(() => {
         avg,
     };
 });
+
+// Mutable
+const progress = ref([props.item.progress * 100]);
+const userDeadline = ref(props.item.public.deadline ? dayjs(props.item.public.deadline).format("YYYY-MM-DD" + "T" + "HH:mm") : undefined);
 const description = ref(props.item.public.description);
 const userEstimate = ref(props.item.estimateMinutes);
-const debouncedUserEstimate = useDebounce(userEstimate, 500);
 const etaMinutes = computed(() => (100 - progress.value[0]) * props.item.estimateMinutes / 100);
 const organizationName = computed(() => {
     if (!props.item.public.organization) {
         return '个人';
     }
-    const organization = userStore.organizations.find(o => o.id === props.item.public.organization);
+    const organization = userStore.user.organizations.find(o => o.id === props.item.public.organization);
     if (!organization) {
         return '未知';
     }
     return organization.name;
 });
-const permittedToDeletePublic = computed(() => {
+const permittedPublic = computed(() => {
     if (userStore.user.id === props.item.public.author) {
         return true;
     }
-    const organization = userStore.organizations.find(o => o.id === props.item.public.organization);
+    const organization = userStore.user.organizations.find(o => o.id === props.item.public.organization);
     if (!organization) {
         return false;
     }
@@ -85,8 +87,38 @@ function updateProgress(value: number) {
     progress.value = [value];
 }
 
-watch([debouncedProgress, debouncedUserEstimate], () => {
-    itemsStore.updateItem(props.item.id, debouncedProgress.value[0] / 100, debouncedUserEstimate.value);
+const debouncedUserItem = useDebounce(computed(() => {
+    return {
+        progress: progress.value,
+        estimateMinutes: userEstimate.value,
+    }
+}), 500);
+
+const debouncedPublicItem = useDebounce(computed(() => {
+    return {
+        description: description.value,
+        deadline: userDeadline.value,
+    };
+}), 500);
+
+watch(debouncedUserItem, userItem => {
+    itemsStore.updateItem({
+        userItem: {
+            id: props.item.id,
+            progress: userItem.progress[0] / 100,
+            estimateMinutes: userItem.estimateMinutes,
+        }
+    });
+});
+
+watch(debouncedPublicItem, publicItem => {
+    itemsStore.updateItem({
+        publicItem: {
+            id: props.item.publicItem,
+            description: publicItem.description,
+            deadline: dayjs(publicItem.deadline).toISOString(),
+        }
+    });
 });
 </script>
 
@@ -104,10 +136,10 @@ watch([debouncedProgress, debouncedUserEstimate], () => {
         <div class="flex w-full gap-1 items-center mt-1">
             <div class="flex-grow">
                 <ProgressSlider v-model="progress" :min="0" :max="100" :step="1" :max-progress="sharedProgress.max"
-                    :avg-progress="sharedProgress.avg" :max-name="sharedProgress.maxName">
+                    :avg-progress="sharedProgress.avg" :max-name="sharedProgress.maxName" :disabled="!permittedPublic">
                 </ProgressSlider>
             </div>
-            <div class="text-xs text-slate-700 text-center font-mono font-bold w-20">
+            <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">
                 {{ progress[0].toFixed(0) }}% -{{ itemsStore.toHumanTime(etaMinutes) }}</div>
             <div>
                 <Button class="h-4 px-1 py-1" @click="updateProgress(100)">
@@ -121,7 +153,21 @@ watch([debouncedProgress, debouncedUserEstimate], () => {
             </Badge>
             <div class="flex gap-1 items-center text-xs bg-lime-200 rounded-md px-2 py-0.5">
                 <Icon icon="icon-park:deadline-sort"></Icon>
-                <div>{{ deadline }}</div>
+                <Popover v-if="permittedPublic">
+                    <PopoverTrigger>
+                        <div
+                            class="border border-lime-500 border-dashed hover:bg-lime-300 active:bg-lime-400 rounded-md px-1 text-sm">
+                            {{ deadline }}</div>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                        <div>更改截止日期</div>
+                        <div class="flex gap-1 items-center">
+                            <span>改为</span>
+                            <Input type="datetime-local" v-model="userDeadline" class="w-48 h-7"></Input>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+                <div v-else class="text-xs">{{ deadline }}</div>
             </div>
             <div class="flex gap-1 items-center text-sm bg-amber-200 rounded-md px-2 py-0.5">
                 <Icon icon="hugeicons:estimate-02"></Icon>
@@ -156,14 +202,14 @@ watch([debouncedProgress, debouncedUserEstimate], () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                         <DropdownMenuLabel class="text-red-500 flex items-center gap-1"
-                            @click="itemsStore.deleteItem(item.id, 'user')">
+                            @click="itemsStore.deleteItems([item.id], 'user')">
                             <Icon icon="material-symbols:delete-outline" />删除（仅个人）
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                     </DropdownMenuItem>
-                    <DropdownMenuItem v-if="permittedToDeletePublic">
+                    <DropdownMenuItem v-if="permittedPublic">
                         <DropdownMenuLabel class="text-red-500 flex items-center gap-1"
-                            @click="itemsStore.deleteItem(item.publicItem, 'public')">
+                            @click="itemsStore.deleteItems([item.publicItem], 'public')">
                             <Icon icon="material-symbols:delete-outline" />删除（全体）
                         </DropdownMenuLabel>
                     </DropdownMenuItem>

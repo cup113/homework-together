@@ -2,9 +2,16 @@ import RouteBase from '../services/route.mjs';
 import type { RawOrganization, SharedProgress } from '../types/contract.js';
 import type { OrganizationsResponse } from '../types/pocketbase-types.js';
 
-export class ListOrganizationsRoute extends RouteBase<OrganizationsResponse[], never> {
+export class QueryOrganizationRoute extends RouteBase<OrganizationsResponse[], never> {
+    private name: string;
+
+    constructor(name: string) {
+        super();
+        this.name = name;
+    }
+
     public async handle() {
-        const organizations = await this.db.listOrganizations(); // 获取所有组织
+        const organizations = await this.db.queryOrganization(this.name);
         return this.success(organizations);
     }
 }
@@ -29,6 +36,7 @@ export class EnterOrganizationRoute extends RouteBase<OrganizationsResponse, 400
         }
         try {
             const result = await this.db.enterOrganization(authResult.record.id, this.organizationId);
+            this.io().to(result.id).emit("refresh", authResult.record.id);
             return this.success(result);
         } catch (error) {
             return this.convertError(error, [400]);

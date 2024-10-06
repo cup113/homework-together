@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
-import { ref, reactive, computed, nextTick } from 'vue';
+import { reactive, computed, nextTick } from 'vue';
 import { useNetworkStore } from './network';
 import { useUserStore } from './user';
 import type { SharedProgress } from '@/../types/contract';
-import dayjs from 'dayjs';
+import type { ProgressChange } from '@/../types/ws';
 
 export const useShareStore = defineStore('share', () => {
     const sharedProgress = reactive<SharedProgress>({
@@ -12,7 +12,6 @@ export const useShareStore = defineStore('share', () => {
         overall: {},
         users: [],
     });
-    const lastUpdated = ref(dayjs().subtract(1, 'hour')); // to enable first update
 
     const rankedUsers = computed(() => {
         return Object.entries(sharedProgress.overall)
@@ -26,9 +25,6 @@ export const useShareStore = defineStore('share', () => {
     });
 
     async function refreshProgress() {
-        if (dayjs().diff(lastUpdated.value, 'minute') < 1) {
-            return;
-        }
         const network = useNetworkStore();
         const progress = await network.client.organizations.progress.query();
         if (progress.status === 200) {
@@ -42,11 +38,20 @@ export const useShareStore = defineStore('share', () => {
         }
     }
 
+    async function update_progress(progress: ProgressChange) {
+        const originalProgress = sharedProgress.items[progress.itemId][progress.userId];
+        const diff = [progress.newProgress[0] - originalProgress[0], progress.newProgress[1] - originalProgress[1]];
+        sharedProgress.items[progress.itemId][progress.userId] = progress.newProgress;
+        sharedProgress.subjects[progress.subjectId][progress.userId][0] += diff[0];
+        sharedProgress.subjects[progress.subjectId][progress.userId][1] += diff[1];
+        sharedProgress.overall[progress.userId][0] += diff[0];
+        sharedProgress.overall[progress.userId][1] += diff[1];
+    }
+
     nextTick(() => {
         const store = useUserStore();
         store.onChecked(() => {
             refreshProgress();
-            setInterval(() => refreshProgress(), 1000 * 60 * 3); // every 3 minutes
         });
     });
 
@@ -54,5 +59,6 @@ export const useShareStore = defineStore('share', () => {
         rankedUsers,
         sharedProgress,
         refreshProgress,
+        update_progress,
     }
 });

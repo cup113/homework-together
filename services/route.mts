@@ -1,5 +1,6 @@
 import { DBService } from "./database.mjs";
 import logger from './logger.mjs';
+import { io } from "./ws.mjs";
 import { ClientResponseError, type RecordAuthResponse } from 'pocketbase'
 import type { UsersResponse } from '../types/pocketbase-types.js';
 import { HTTPStatusCode } from '@ts-rest/core';
@@ -28,6 +29,10 @@ export default abstract class RouteBase<T, ErrorCode extends HTTPStatusCode> {
     constructor() {
         this.db = new DBService();
         this.logger = logger;
+    }
+
+    protected io() {
+        return io();
     }
 
     protected success(body: T) {

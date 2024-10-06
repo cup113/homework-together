@@ -8,7 +8,7 @@ import type { OrganizationsResponse } from '@/../types/pocketbase-types';
 const initialUser = () => ({
   id: '',
   username: '',
-  organizations: new Array<{ name: string, id: string }>(),
+  organizations: new Array<OrganizationsResponse>(),
 })
 
 export const useUserStore = defineStore('user', () => {
@@ -100,9 +100,9 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function list_organizations() {
+  async function query_organizations(name: string) {
     const network = useNetworkStore();
-    const response = await network.client.organizations.list.query({});
+    const response = await network.client.organizations.query.query({ query: { name } });
     if (response.status === 200) {
       organizations.value = response.body;
     } else {
@@ -117,7 +117,7 @@ export const useUserStore = defineStore('user', () => {
       body: { organizationId }
     });
     if (response.status === 200) {
-      user.value.organizations.push({ name: response.body.name, id: organizationId });
+      user.value.organizations.push(response.body);
       return true;
     } else {
       console.error(response.body);
@@ -130,8 +130,6 @@ export const useUserStore = defineStore('user', () => {
     check();
   });
 
-  onChecked(list_organizations);
-
   return {
     isLoggedIn,
     token,
@@ -141,6 +139,7 @@ export const useUserStore = defineStore('user', () => {
     logout,
     login,
     register,
+    query_organizations,
     join_organization,
   }
 });

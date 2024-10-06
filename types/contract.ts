@@ -19,8 +19,8 @@ export type RawPublicItem = Omit<PublicItemsRecord, 'author'>
 
 const ID = z.string().length(15);
 const DATE_STR = z.string().max(30);
-const GENERAL_STRING = z.string().max(1024);
-const LONG_STRING = z.string().max(32 * 1024);
+const GENERAL_STRING = z.string().max(256);
+const LONG_STRING = z.string().max(4 * 1024);
 
 const itemsUpdateSchema = z.object({
     publicItem: z.optional(z.object({
@@ -35,6 +35,7 @@ const itemsUpdateSchema = z.object({
             PublicItemsRangeOptions.some,
             PublicItemsRangeOptions.private
         ])),
+        snaps: z.optional(GENERAL_STRING),
     })),
     userItem: z.optional(z.object({
         id: ID,
@@ -55,6 +56,7 @@ const itemsCreateSchema = z.object({
             PublicItemsRangeOptions.some,
             PublicItemsRangeOptions.private
         ]),
+        snaps: z.optional(GENERAL_STRING),
     }),
     userItem: z.object({
         progress: z.optional(z.number()),
@@ -154,7 +156,7 @@ const itemsContract = c.router({
         },
         body: z.object({
             type: z.enum(['public', 'user']),
-            id: ID,
+            ids: z.array(ID),
         }),
         summary: "Delete an item",
     },
@@ -171,9 +173,12 @@ const subjectsContract = c.router({
 })
 
 const organizationsContract = c.router({
-    list: {
+    query: {
         method: 'GET',
         path: '/api/v1/organizations',
+        query: z.object({
+            name: GENERAL_STRING
+        }),
         responses: {
             200: c.type<OrganizationsResponse[]>(),
         },
