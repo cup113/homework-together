@@ -54,7 +54,6 @@ export class UpdateItemRoute extends RouteBase<true, 401 | 403 | 404> {
                     if (publicItem === undefined) {
                         return this.error("Public item not found", 404);
                     }
-                    this.logger.info(`Progress updated to ${publicItem.organization}`);
                     this.io().to(publicItem.organization).emit("progressUpdated", {
                         itemId: publicItem.id,
                         subjectId: publicItem.subject,

@@ -78,7 +78,7 @@ export class DBService {
         const lastDate = dayjs(user.lastCheck ?? EARLY);
         const lastDateStr = lastDate.toISOString().replace("T", " ").replace("Z", "");
         const newItems = await this.pb.collection('publicItems').getFullList({
-            filter: `updated >= "${lastDateStr}" && author.id != "${user.id}"`,
+            filter: `updated >= "${lastDateStr}" && author.id != "${user.id}" && range != "private"`,
         });
         await Promise.all(newItems.map(async item => {
             this.pb.collection('userItems').create({
