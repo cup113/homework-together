@@ -6,6 +6,7 @@ import type { SocketClient } from "@/../types/ws";
 
 import { useUserStore } from "./user";
 import { useShareStore } from "./share";
+import { nextTick } from "vue";
 
 export const useNetworkStore = defineStore("network", () => {
     const client = initQueryClient(contract, {
@@ -19,40 +20,55 @@ export const useNetworkStore = defineStore("network", () => {
         jsonQuery: true,
     });
 
-    const socket: SocketClient = io({
-        extraHeaders: {
-            'Authorization': `Bearer ${useUserStore().token}`, // TODO: use token from user store
-        }
-    });
+    let socket: SocketClient | null = null;
+    let firstConnect = true;
 
-    socket.on('connect', () => {
-        console.log('Connected to server');
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Disconnected from server');
-        setTimeout(() => {
-            location.reload();
-        }, 1000 * 100);
-    });
-
-    socket.on('connect_error', error => {
-        console.error('Failed to connect to server', error);
-        alert('Failed to connect to server');
-    });
-
-    socket.on('refresh', (except) => {
+    nextTick(() => {
         const userStore = useUserStore();
-        if (userStore.user.id === except) {
-            return;
-        }
-        setTimeout(() => location.reload(), 600);
+        userStore.onChecked(initSocket);
     });
 
-    socket.on('progressUpdated', data => {
-        const shareStore = useShareStore();
-        shareStore.update_progress(data);
-    })
+    function initSocket() {
+        socket = io({
+            extraHeaders: {
+                'Authorization': `Bearer ${useUserStore().token}`
+            }
+        });
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            if (!firstConnect) {
+                setTimeout(() => location.reload(), 2000);
+            }
+            firstConnect = false;
+        });
+
+        socket.on('disconnect', (reason) => {
+            console.log('Disconnected from server');
+            if (reason === 'io server disconnect') {
+                alert('Server disconnected.');
+            } else if (reason === 'ping timeout' || reason === 'transport close' || reason === 'transport error') {
+                console.log(`Reason: ${reason}`);
+            }
+        });
+
+        socket.on('connect_error', error => {
+            console.error('Failed to connect to server', error);
+        });
+
+        socket.on('refresh', (except) => {
+            const userStore = useUserStore();
+            if (userStore.user.id === except) {
+                return;
+            }
+            setTimeout(() => location.reload(), 600);
+        });
+
+        socket.on('progressUpdated', data => {
+            const shareStore = useShareStore();
+            shareStore.update_progress(data);
+        });
+    }
 
     return {
         client,
