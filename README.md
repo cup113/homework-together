@@ -30,37 +30,39 @@ Do homework together with your friends!
 - [x] Add "Delete outdated"
 - [x] Refactor UI, turn progress to separator
 
-### Phase 4: Polish Details
-
-> v0.0
+### v0.0
 
 - [ ] Fix Mutability issue
-- [ ] Delete Item Confirmation
 - [ ] Attach item to organization
 - [ ] Add organization registration
 - [ ] Add loading animation
-- [ ] Add snap points feature
 - [ ] "Some" Selection
+- [ ] Refactor: User Via Organization
+
+### v0.1
+
+- [ ] Delete Item Confirmation
+- [ ] Add user management (email registration, reset password, etc.)
+- [ ] Add snap points feature
 - [ ] Transition animation
 - [ ] Socket.io Progress update
+- [ ] Responsive design
+
+### v0.2
+
+- [ ] Add Unit test
 - [ ] Undo & Redo System
 - [ ] Handle Errors
 - [ ] Add pagination in homework list
-- [ ] Add leaderboard pagination
+- [ ] Add Goal system
+- [ ] Add Organization management
 - [ ] Add note system
-- [ ] User Via Organization
-- [ ] Responsive design
 
-### Phase 5: Features
+### v0.3
 
-> v0.1
-
-- [ ] Add Unit test
 - [ ] Add customization
 - [ ] Updated Item: Organization, range, publicEstimate
-- [ ] Add user management (email registration, reset password, etc.)
 - [ ] Add Subject belonging to organization
-- [ ] Add Goal system
 - [ ] Add organization entry verification
-- [ ] Add Organization management
 - [ ] Add Comment & Request system
+- [ ] Add leaderboard pagination

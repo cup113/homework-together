@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
 
 const props = defineProps<{
     index: number;
@@ -49,6 +49,23 @@ const sharedProgress = computed(() => {
         maxName: maxNames.join(', '),
         avg,
     };
+});
+
+const urgency = computed(() => {
+    if (props.item.public.deadline === undefined) {
+        return 0;
+    }
+    const diff = dayjs(props.item.public.deadline).diff(dayjs(), 'days');
+    return 1 / (1 + Math.exp(diff / 2));
+});
+
+const color = computed(() => {
+    const leastUrgentColor = [0, 179, 80];
+    const mostUrgentColor = [255, 0, 0];
+
+    const color = [0, 1, 2].map(i => leastUrgentColor[i] + (mostUrgentColor[i] - leastUrgentColor[i]) * urgency.value).map(v => v.toFixed(0));
+
+    return `rgb(${color.join(',')})`;
 });
 
 // Mutable
@@ -125,79 +142,67 @@ watch(debouncedPublicItem, publicItem => {
 <template>
     <div class="rounded-lg hover:bg-slate-50 px-3 pt-1 border-t border-slate-300 flex flex-col">
         <div class="flex w-full gap-2 items-center">
-            <span class="text-sm font-bold text-slate-500">{{ index }}</span>
+            <span class="text-sm font-bold" :style="{ color }">{{ index }}</span>
             <Badge class="flex flex-row items-center h-6 font-mono">
                 <div>{{ subject?.abbr }}</div>
             </Badge>
             <div class="flex-grow">
                 <MiniEditor v-model="description" placeholder="请输入公开内容/描述"></MiniEditor>
             </div>
-        </div>
-        <div class="flex w-full gap-1 items-center mt-1">
-            <div class="flex-grow">
-                <ProgressSlider v-model="progress" :min="0" :max="100" :step="1" :max-progress="sharedProgress.max"
-                    :avg-progress="sharedProgress.avg" :max-name="sharedProgress.maxName">
-                </ProgressSlider>
-            </div>
-            <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">
-                {{ progress[0].toFixed(0) }}% -{{ itemsStore.toHumanTime(etaMinutes) }}</div>
-            <div>
-                <Button class="h-4 px-1 py-1" @click="updateProgress(100)">
-                    <Icon icon="charm:square-tick" />
-                </Button>
-            </div>
-        </div>
-        <div class="flex gap-1 items-center justify-around">
-            <Badge class="h-5" variant="outline">
-                <Icon icon="tabler:tag-filled"></Icon> {{ range }}
-            </Badge>
-            <div class="flex gap-1 items-center text-xs bg-lime-200 rounded-md px-2 py-0.5">
-                <Icon icon="icon-park:deadline-sort"></Icon>
-                <Popover v-if="permittedPublic">
-                    <PopoverTrigger>
-                        <div
-                            class="border border-lime-500 border-dashed hover:bg-lime-300 active:bg-lime-400 rounded-md px-1 text-sm">
-                            {{ deadline }}</div>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                        <div>更改截止日期</div>
+            <Dialog>
+                <DialogTrigger>
+                    <div class="hover:bg-amber-100 active:bg-amber-200 rounded-md p-1">
+                        <Icon icon="tabler:edit" />
+                    </div>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>编辑项目</DialogTitle>
+                        <MiniEditor v-model="description" placeholder="请输入公开内容/描述" disabled></MiniEditor>
+                    </DialogHeader>
+                    <div class="flex flex-col gap-2">
                         <div class="flex gap-1 items-center">
-                            <span>改为</span>
+                            <span>截止日期改为</span>
                             <Input type="datetime-local" v-model="userDeadline" class="w-48 h-7"></Input>
                         </div>
-                    </PopoverContent>
-                </Popover>
-                <div v-else class="text-xs">{{ deadline }}</div>
-            </div>
-            <div class="flex gap-1 items-center text-sm bg-amber-200 rounded-md px-2 py-0.5">
-                <Icon icon="hugeicons:estimate-02"></Icon>
-                <Popover>
-                    <PopoverTrigger>
-                        <div
-                            class="font-bold border border-amber-500 border-dashed hover:bg-amber-300 active:bg-amber-400 rounded-md px-1">
-                            {{ itemsStore.toHumanTime(item.estimateMinutes) }}</div>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                        <div>更改个人预估时间</div>
                         <div class="flex gap-1 items-center">
-                            <span>改为</span>
-                            <Input type="number" min="0" step="1" v-model="userEstimate" class="w-16 h-7"></Input>
+                            <span>个人预估时间改为</span>
+                            <Input type="number" min="0" step="1" v-model="userEstimate" class="w-20 h-7"></Input>
                             <span>分钟</span>
                         </div>
-                    </PopoverContent>
-                </Popover>
-                <div class="text-xs">{{ itemsStore.toHumanTime(item.public.estimateMinutes) }}</div>
-            </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
             <DropdownMenu>
                 <DropdownMenuTrigger>
-                    <Button variant="ghost" class="p-1">
-                        <Icon icon="weui:more-filled" class="w-6 h-6" color="purple" />
-                    </Button>
+                    <div class="hover:bg-amber-100 active:bg-amber-200 rounded-md p-1">
+                        <Icon icon="weui:more-filled" class="w-6 h-6" />
+                    </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent class="flex flex-col">
                     <DropdownMenuItem>
                         <DropdownMenuLabel class="">
                             <div>归属：{{ organizationName }}</div>
+                        </DropdownMenuLabel>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                        <DropdownMenuLabel class="flex items-center gap-1">
+                            <Icon icon="tabler:tag-filled"></Icon> {{ range }}
+                        </DropdownMenuLabel>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                        <DropdownMenuLabel class="flex items-center gap-1">
+                            <Icon icon="icon-park:deadline-sort"></Icon>
+                            {{ deadline }}
+                        </DropdownMenuLabel>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                        <DropdownMenuLabel>
+                            <div class="flex items-center gap-1">
+                                <Icon icon="hugeicons:estimate-02"></Icon>
+                                <div class="text-base">{{ itemsStore.toHumanTime(item.estimateMinutes) }}</div>
+                                <div class="text-xs">{{ itemsStore.toHumanTime(item.public.estimateMinutes) }}</div>
+                            </div>
                         </DropdownMenuLabel>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
@@ -215,6 +220,21 @@ watch(debouncedPublicItem, publicItem => {
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+        </div>
+        <div class="flex w-full items-center my-1">
+            <div class="flex-grow">
+                <ProgressSlider v-model="progress" :min="0" :max="100" :step="1" :max-progress="sharedProgress.max"
+                    :avg-progress="sharedProgress.avg" :max-name="sharedProgress.maxName">
+                </ProgressSlider>
+            </div>
+            <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">
+                {{ progress[0].toFixed(0) }}% -{{ itemsStore.toHumanTime(etaMinutes) }}</div>
+            <div>
+                <Button class="h-4 px-1 py-1 bg-cyan-600 hover:bg-cyan-700 active:bg-cyan-800"
+                    @click="updateProgress(100)">
+                    <Icon icon="charm:square-tick" />
+                </Button>
+            </div>
         </div>
     </div>
 </template>

@@ -12,10 +12,12 @@ const model = defineModel<string>({
 const props = defineProps<{
     placeholder: string;
     class?: string;
+    disabled?: boolean;
 }>()
 
 const editor = useEditor({
     content: model.value,
+    editable: !props.disabled,
     onUpdate() {
         model.value = editor.value?.getHTML() ?? ' ';
     },

@@ -48,7 +48,7 @@ export const useItemsStore = defineStore("items", () => {
                 return a.subject.abbr.localeCompare(b.subject.abbr);
             }
             if (a.public.deadline !== b.public.deadline) {
-                return (b.public.deadline ?? "").localeCompare(a.public.deadline ?? "");
+                return (a.public.deadline ?? "").localeCompare(b.public.deadline ?? "");
             }
             return a.public.description.localeCompare(b.public.description);
         });
