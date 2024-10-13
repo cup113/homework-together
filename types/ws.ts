@@ -1,6 +1,7 @@
 import type { Server } from "socket.io";
 import type { Socket } from 'socket.io-client';
 import type { UsersResponse } from "./pocketbase-types.js";
+import type { ItemsCreate, ItemsUpdate, Item } from "./contract.js";
 
 export interface ProgressChange {
     itemId: string;
@@ -10,23 +11,21 @@ export interface ProgressChange {
 }
 
 export interface ServerToClientEvents {
-    // itemAdded(item: Item): void;
-    // itemUpdated(item: ItemsUpdate): void;
-    // itemsDeleted(ids: string[]): void;
     info(version: string): void;
-    refresh(except: string, sources: ['auth'] | ('items' | 'share')[]): void;
+    refresh(except: string, sources: ('items' | 'share')[]): void;
     progressUpdated(data: ProgressChange): void;
-    // userJoined(user: UsersResponse): void;
-
-    // itemAddFailed(failed: Failed<ItemsCreate>): void;
-    // itemUpdateFailed(failed: Failed<ItemsUpdate>): void;
-    // itemsDeleteFailed(failed: Failed<string[]>): void;
+    userJoined(user: UsersResponse): void;
+    itemsDeleted(ids: string[]): void;
+    itemCreated(item: Item): void;
 }
 
-export type ClientToServerEvents = object;
-// updateItem(item: ItemsUpdate): void;
-// createItem(item: ItemsCreate): void;
-// deleteItems(ids: string[], type: "user" | "public"): void;
+export type ClientToServerEvents = {
+    updateItem(item: ItemsUpdate, callback: (error?: string) => void): void;
+    createItem(item: ItemsCreate): void;
+    deleteItems(ids: string[], type: "user" | "public"): void;
+
+    received(): void;
+}
 
 export type InterServerEvents = object;
 

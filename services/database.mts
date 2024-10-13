@@ -111,10 +111,18 @@ export class DBService {
         };
     }
 
+    public async updateUserActivity(userId: string) {
+        await this.pb.collection('users').update(userId, {
+            lastActive: dayjs().toISOString().replace("T", " "),
+        } as Required<Pick<UsersRecord, 'lastActive'>>);
+    }
+
     public async getUserItems(userId?: string): Promise<Item[]> {
         const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsResponse }>>(Object.assign({
             expand: "publicItem",
-        }, userId ? { filter: `user.id = "${userId}"` } : { filter: "confirmed = true" }));
+        }, userId ? { filter: `user.id = "${userId}"` } : {
+            filter: `user.lastActive >= created && confirmed = true`
+        }));
         return Promise.all(items.map(async item => {
             const { expand, ...rest } = item;
             if (!expand) {

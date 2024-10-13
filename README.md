@@ -40,7 +40,7 @@ Do homework together with your friends!
 
 ### v0.1
 
-- [ ] Add lastActive
+- [ ] Polish lastActive mechanism (re-update)
 - [ ] Socket.io Progress update
 - [ ] Delete Item Confirmation
 - [ ] Add snap points feature

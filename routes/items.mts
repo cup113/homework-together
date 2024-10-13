@@ -15,6 +15,7 @@ export class GetItemRoute extends RouteBase<Item[], 401> {
                 return authResult;
             }
             userId = authResult.record.id;
+            await this.db.updateUserActivity(userId);
         }
         const items = await this.db.getUserItems(userId);
         return this.success(items);
@@ -40,6 +41,7 @@ export class UpdateItemRoute extends RouteBase<true, 401 | 403 | 404> {
             if (this.userData) {
                 const { id, ...userData } = this.userData;
                 const updatedItem = await this.db.updateUserItem(id, userData);
+                await this.db.updateUserActivity(authResult.record.id);
                 const progressChanged = [userData.confirmed, userData.estimateMinutes, userData.progress].some(value => value !== undefined);
                 if (progressChanged) {
                     const publicItem = updatedItem.expand?.publicItem;
