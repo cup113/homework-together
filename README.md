@@ -40,15 +40,14 @@ Do homework together with your friends!
 
 ### v0.1
 
+- [ ] Add lastActive
+- [ ] Socket.io Progress update
 - [ ] Delete Item Confirmation
 - [ ] Add snap points feature
 - [ ] Transition animation
-- [ ] Add lastActive
-- [ ] Socket.io Progress update
 
 ### v0.2
 
-- [ ] Add Unit test
 - [ ] Handle Errors
 - [ ] Responsive design
 - [ ] Add Goal system
@@ -67,3 +66,4 @@ Do homework together with your friends!
 - [ ] Add customization
 - [ ] Add Subject belonging to organization
 - [ ] Add Comment & Request system
+- [ ] Add Unit test

@@ -47,7 +47,7 @@ export const useShareStore = defineStore('share', () => {
         if (!sharedProgress.items[progress.itemId][progress.userId]) {
             sharedProgress.items[progress.itemId][progress.userId] = [0, 0];
         }
-        if (!sharedProgress.items[progress.subjectId]) {
+        if (!sharedProgress.subjects[progress.subjectId]) {
             sharedProgress.subjects[progress.subjectId] = {};
         }
         if (!sharedProgress.subjects[progress.subjectId][progress.userId]) {

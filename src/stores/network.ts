@@ -69,14 +69,6 @@ export const useNetworkStore = defineStore("network", () => {
                         const shareStore = useShareStore();
                         shareStore.refreshProgress();
                     },
-                    auth() {
-                        const userStore = useUserStore();
-                        userStore.onChecked(() => {
-                            this.items();
-                            this.share();
-                        });
-                        userStore.check();
-                    },
                 } satisfies Required<Record<typeof source, () => void>>;
                 funcMap[source]();
             })
