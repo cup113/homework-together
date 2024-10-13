@@ -11,10 +11,10 @@ jobs:
       - checkout
       - node/install-packages:
           cache-path: ~/project/node_modules
-          override-ci-command: npm install
+          override-ci-command: pnpm install
       - run:
           name: Run tests
-          command: npm test --passWithNoTests
+          command: python run.py --test
   build-node:
     # Build node project
     executor: node/default
@@ -22,9 +22,9 @@ jobs:
       - checkout
       - node/install-packages:
           cache-path: ~/project/node_modules
-          override-ci-command: npm install
+          override-ci-command: pnpm install
       - run:
-          command: npm run build
+          command: pnpm run build
       - run:
           name: Create the ~/artifacts directory if it doesn't exist
           command: mkdir -p ~/artifacts
