@@ -32,37 +32,37 @@ Do homework together with your friends!
 
 ### v0.0
 
-- [ ] Fix Mutability issue
-- [ ] Attach item to organization
-- [ ] Add organization registration
-- [ ] Add loading animation
-- [ ] "Some" Selection
-- [ ] Refactor: User Via Organization
+- [x] Fix Mutability issue
+- [x] Attach item to organization
+- [x] Add organization registration
+- [x] Add loading animation
+- [x] New items confirmations
 
 ### v0.1
 
 - [ ] Delete Item Confirmation
-- [ ] Add user management (email registration, reset password, etc.)
 - [ ] Add snap points feature
 - [ ] Transition animation
 - [ ] Socket.io Progress update
-- [ ] Responsive design
 
 ### v0.2
 
 - [ ] Add Unit test
-- [ ] Undo & Redo System
 - [ ] Handle Errors
-- [ ] Add pagination in homework list
+- [ ] Responsive design
 - [ ] Add Goal system
-- [ ] Add Organization management
-- [ ] Add note system
 
 ### v0.3
 
-- [ ] Add customization
+- [ ] Add user management (email registration, reset password, etc.)
+- [ ] Add Organization management
+- [ ] Add note system
 - [ ] Updated Item: Organization, range, publicEstimate
+
+### v0.4
+
+- [ ] Add pagination & filter in homework list
+- [ ] Undo & Redo System
+- [ ] Add customization
 - [ ] Add Subject belonging to organization
-- [ ] Add organization entry verification
 - [ ] Add Comment & Request system
-- [ ] Add leaderboard pagination

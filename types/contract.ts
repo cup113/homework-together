@@ -5,7 +5,7 @@ import { initContract } from '@ts-rest/core';
 
 export type UserAuth = UsersRecord & AuthSystemFields<object> & { token: string };
 export type UserInfo = Omit<UserAuth, 'organizations'> & { organizations: OrganizationsResponse[] }
-export type RawOrganization = Omit<OrganizationsRecord, 'leader' | 'managers'>
+export type RawOrganization = Pick<OrganizationsRecord, 'name'>
 export type SharedProgress = {
     items: Record<string, Record<string, [number, number]>>,
     subjects: Record<string, Record<string, [number, number]>>,
@@ -14,7 +14,7 @@ export type SharedProgress = {
 };
 export type Subject = SubjectsRecord & Pick<AuthSystemFields, 'id'>;
 export type Item = UserItemsResponse & { public: PublicItemsRecord };
-export type RawUserItem = Omit<UserItemsRecord, 'user' | 'publicItem'>
+export type RawUserItem = Omit<UserItemsRecord, 'user' | 'publicItem' | 'confirmed'>
 export type RawPublicItem = Omit<PublicItemsRecord, 'author'>
 
 const ID = z.string().length(15);
@@ -42,6 +42,7 @@ const itemsUpdateSchema = z.object({
         progress: z.optional(z.number()),
         estimateMinutes: z.optional(z.number()),
         note: z.optional(LONG_STRING),
+        confirmed: z.optional(z.boolean()),
     })),
 });
 const itemsCreateSchema = z.object({
@@ -173,6 +174,18 @@ const subjectsContract = c.router({
 })
 
 const organizationsContract = c.router({
+    register: {
+        method: 'POST',
+        path: '/api/v1/organizations',
+        body: z.object({
+            name: GENERAL_STRING,
+        }),
+        responses: {
+            200: c.type<OrganizationsResponse>(),
+            400: ErrorType,
+            401: ErrorType,
+        },
+    },
     query: {
         method: 'GET',
         path: '/api/v1/organizations',

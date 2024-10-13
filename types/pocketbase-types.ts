@@ -66,6 +66,7 @@ export type SubjectsRecord = {
 }
 
 export type UserItemsRecord = {
+	confirmed?: boolean
 	estimateMinutes: number
 	note?: HTMLString
 	progress?: number

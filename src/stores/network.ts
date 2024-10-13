@@ -1,14 +1,17 @@
 import { defineStore } from "pinia";
+import { useLocalStorage } from "@vueuse/core";
 import io from 'socket.io-client';
 import { initQueryClient } from '@ts-rest/vue-query'
 import contract from '@/../types/contract'
 import type { SocketClient } from "@/../types/ws";
 
+import { nextTick } from "vue";
 import { useUserStore } from "./user";
 import { useShareStore } from "./share";
-import { nextTick } from "vue";
+import { useItemsStore } from "./items";
 
 export const useNetworkStore = defineStore("network", () => {
+    const buildVersion = useLocalStorage('HT_BUILD_VERSION', 'unknown');
     const client = initQueryClient(contract, {
         baseUrl: location.origin,
         baseHeaders: {
@@ -21,7 +24,6 @@ export const useNetworkStore = defineStore("network", () => {
     });
 
     let socket: SocketClient | null = null;
-    let firstConnect = true;
 
     nextTick(() => {
         const userStore = useUserStore();
@@ -37,16 +39,12 @@ export const useNetworkStore = defineStore("network", () => {
 
         socket.on('connect', () => {
             console.log('Connected to server');
-            if (!firstConnect) {
-                setTimeout(() => location.reload(), 2000);
-            }
-            firstConnect = false;
         });
 
         socket.on('disconnect', (reason) => {
             console.log('Disconnected from server');
-            if (reason === 'io server disconnect') {
-                alert('Server disconnected.');
+            if (reason === 'io server disconnect' || reason === 'parse error') {
+                console.error(reason);
             } else if (reason === 'ping timeout' || reason === 'transport close' || reason === 'transport error') {
                 console.log(`Reason: ${reason}`);
             }
@@ -56,12 +54,39 @@ export const useNetworkStore = defineStore("network", () => {
             console.error('Failed to connect to server', error);
         });
 
-        socket.on('refresh', (except) => {
+        socket.on('refresh', (except, sources) => {
             const userStore = useUserStore();
             if (userStore.user.id === except) {
                 return;
             }
-            setTimeout(() => location.reload(), 600);
+            sources.forEach(source => {
+                const funcMap = {
+                    items() {
+                        const itemsStore = useItemsStore();
+                        itemsStore.refreshItems();
+                    },
+                    share() {
+                        const shareStore = useShareStore();
+                        shareStore.refreshProgress();
+                    },
+                    auth() {
+                        const userStore = useUserStore();
+                        userStore.onChecked(() => {
+                            this.items();
+                            this.share();
+                        });
+                        userStore.check();
+                    },
+                } satisfies Required<Record<typeof source, () => void>>;
+                funcMap[source]();
+            })
+        });
+
+        socket.on('info', version => {
+            if (buildVersion.value === 'unknown' || version !== buildVersion.value) {
+                buildVersion.value = version;
+                setTimeout(() => location.reload(), 600);
+            }
         });
 
         socket.on('progressUpdated', data => {

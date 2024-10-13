@@ -13,7 +13,7 @@ import loggerService from './services/logger.mjs'
 import { LoginRoute, RegisterRoute, CheckUserRoute } from './routes/auth.mjs';
 import { CreateItemRoute, GetItemRoute, UpdateItemRoute, DeleteItemsRoute } from './routes/items.mjs'
 import { ListSubjectsRoute } from './routes/subjects.mjs';
-import { QueryOrganizationRoute, EnterOrganizationRoute, GetProgressRoute } from './routes/organizations.mjs';
+import { CreateOrganizationRoute, QueryOrganizationRoute, EnterOrganizationRoute, GetProgressRoute } from './routes/organizations.mjs';
 
 import type { SocketServer } from './types/ws.js';
 import { initIO } from './services/ws.mjs';
@@ -60,6 +60,9 @@ const router = serverRouter.router(contract, {
         }
     },
     organizations: {
+        register({ headers: { authorization }, body }) {
+            return new CreateOrganizationRoute(authorization, body).getResponse();
+        },
         query({ query: { name } }) {
             return new QueryOrganizationRoute(name).getResponse();
         },

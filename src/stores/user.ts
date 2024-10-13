@@ -31,6 +31,7 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function check() {
+    checked.value = false;
     const network = useNetworkStore();
     if (!isLoggedIn.value) {
       return;
@@ -126,6 +127,21 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  async function create_organization(name: string) {
+    const network = useNetworkStore();
+    const response = await network.client.organizations.register.mutation({
+      body: { name }
+    });
+    if (response.status === 200) {
+      user.value.organizations.push(response.body);
+      return true;
+    } else {
+      console.error(response.body);
+      alert('Failed to add organization.');
+      return false;
+    }
+  }
+
   nextTick(() => {
     check();
   });
@@ -135,11 +151,13 @@ export const useUserStore = defineStore('user', () => {
     token,
     user,
     organizations,
+    check,
     onChecked,
     logout,
     login,
     register,
     query_organizations,
     join_organization,
+    create_organization,
   }
 });

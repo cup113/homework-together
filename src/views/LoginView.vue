@@ -1,13 +1,11 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
-import { useThrottle } from '@vueuse/core';
+import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
 import router from '@/router/index';
 
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
@@ -15,8 +13,6 @@ const userStore = useUserStore();
 const username = ref(userStore.user.username);
 const password = ref('');
 const passwordConfirm = ref('');
-const organizationName = ref('');
-const throttledOrganizationName = useThrottle(organizationName, 500);
 
 async function login() {
     await userStore.login(username.value, password.value);
@@ -36,15 +32,6 @@ async function register() {
         router.push('/');
     }
 }
-
-async function join_organization(organizationId: string) {
-    await userStore.join_organization(organizationId);
-}
-
-watch(throttledOrganizationName, async value => {
-    await userStore.query_organizations(value);
-})
-
 </script>
 
 <template>
@@ -53,7 +40,6 @@ watch(throttledOrganizationName, async value => {
             <TabsList class="w-full">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
-                <TabsTrigger value="organizations" v-if="userStore.isLoggedIn">Organizations</TabsTrigger>
             </TabsList>
             <TabsContent value="login">
                 <form class="flex flex-col gap-2" @submit.prevent="login">
@@ -109,24 +95,6 @@ watch(throttledOrganizationName, async value => {
                         </CardFooter>
                     </Card>
                 </form>
-            </TabsContent>
-            <TabsContent value="organizations">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Organization</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Input type="text" name="organization" placeholder="请输入组织名称" v-model="organizationName" class="mb-2" />
-                        <div v-for="organization in userStore.organizations" :key="organization.id"
-                            class="flex items-center gap-2">
-                            <div>{{ organization.name }}</div>
-                            <div>
-                                <Button @click="join_organization(organization.id)" v-if="!userStore.user.organizations.some(o => o.id === organization.id)">Join</Button>
-                                <Badge v-else>Joined</Badge>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
             </TabsContent>
         </Tabs>
     </div>

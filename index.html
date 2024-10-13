@@ -5,9 +5,45 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Homework Together</title>
+    <style>
+      #loading {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        height: calc(100dvh - 16px);
+        font-size: 5vw;
+        background-color: rgb(255, 252, 218);
+      }
+
+      #loading>div:last-child {
+        height: 20px;
+        background-color: green;
+        animation: loading 1s ease-in-out infinite;
+        border-radius: 16px;
+      }
+
+      @keyframes loading {
+        0% {
+          width: 16px;
+        }
+        50% {
+          width: 50%;
+        }
+        100% {
+          width: 16px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div id="loading">
+        <div>Loading...</div>
+        <div></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

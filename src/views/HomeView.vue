@@ -3,16 +3,17 @@ import { computed } from 'vue';
 
 import { useItemsStore } from '@/stores/items';
 import { useShareStore } from '@/stores/share';
+import { useUserStore } from '@/stores/user';
 
 import LeaderBoardItem from '@/components/LeaderBoardItem.vue';
 import ItemDisplay from '@/components/ItemDisplay.vue';
 import ItemAdd from '@/components/ItemAdd.vue';
-import { Button } from '@/components/ui/button';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCaption } from '@/components/ui/table';
 import ProgressSlider from '@/components/ProgressSlider.vue';
-import TableCell from '@/components/ui/table/TableCell.vue';
 import SubjectDisplay from '@/components/SubjectDisplay.vue';
-import { useUserStore } from '@/stores/user';
+
+import { Button } from '@/components/ui/button';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const itemsStore = useItemsStore();
 const shareStore = useShareStore();
@@ -98,6 +99,9 @@ const permittedToRemoveAll = computed(() => {
         <div class="flex flex-col">
           <ItemAdd></ItemAdd>
           <ItemDisplay v-for="item, i in itemsStore.itemsSorted" :key="item.id" :item="item" :index="i"></ItemDisplay>
+          <div v-if="itemsStore.itemsLoading">
+            <Skeleton class="w-full h-24"></Skeleton>
+          </div>
           <div class="mt-8 flex justify-between gap-4">
             <Button @click="itemsStore.deleteOutdated('public')" variant="destructive" v-if="permittedToRemoveAll">清除过期作业（所有人）</Button>
             <Button @click="itemsStore.deleteOutdated('user')" variant="destructive">清除过期作业（仅个人）</Button>

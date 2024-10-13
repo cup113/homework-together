@@ -28,6 +28,13 @@ const userStore = useUserStore();
                     </NavigationMenuLink>
                 </RouterLink>
             </NavigationMenuItem>
+            <NavigationMenuItem v-if="userStore.isLoggedIn">
+                <RouterLink to="/manage">
+                    <NavigationMenuLink :class="navigationMenuTriggerStyle()">
+                        <span>Manage</span>
+                    </NavigationMenuLink>
+                </RouterLink>
+            </NavigationMenuItem>
         </NavigationMenuList>
     </NavigationMenu>
 </template>

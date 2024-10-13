@@ -44,19 +44,13 @@ export class RegisterRoute extends RouteService<UserAuth, 400> {
 }
 
 export class CheckUserRoute extends RouteService<UserInfo, 401> {
-    private token: string | undefined;
-
-    constructor(token: string | undefined) {
-        super();
-        this.token = token;
+    constructor(authorization: string | undefined) {
+        super(authorization);
     }
 
     protected async handle() {
-        if (!this.token) {
-            return this.error("Unauthorized", 401)
-        }
         try {
-            const authResult = await this.auth(this.token);
+            const authResult = await this.auth();
             if (authResult instanceof Error) {
                 return authResult;
             }

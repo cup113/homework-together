@@ -24,11 +24,13 @@ class Success<T> {
 
 export default abstract class RouteBase<T, ErrorCode extends HTTPStatusCode> {
     protected db: DBService;
+    protected authorization: string | undefined;
     protected logger: typeof logger;
 
-    constructor() {
+    constructor(authorization?: string) {
         this.db = new DBService();
         this.logger = logger;
+        this.authorization = authorization;
     }
 
     protected io() {
@@ -57,11 +59,14 @@ export default abstract class RouteBase<T, ErrorCode extends HTTPStatusCode> {
         }
     }
 
-    protected async auth(authorization: string): Promise<RecordAuthResponse<UsersResponse> | RouteError<401>> {
-        if (!authorization.startsWith('Bearer ')) {
+    protected async auth(): Promise<RecordAuthResponse<UsersResponse> | RouteError<401>> {
+        if (this.authorization === undefined) {
+            return new RouteError("Authorization header is missing", 401)
+        }
+        if (!this.authorization.startsWith('Bearer ')) {
             return new RouteError("Invalid authorization header", 401)
         }
-        const token = authorization.slice("Bearer ".length);
+        const token = this.authorization.slice("Bearer ".length);
         try {
             return this.db.authWithToken(token);
         } catch {

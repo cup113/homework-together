@@ -9,12 +9,13 @@ import dayjs from "dayjs";
 export const useItemsStore = defineStore("items", () => {
     const items = ref(new Array<Item>());
     const subjects = ref(new Array<Subject>());
+    const itemsLoading = ref(true);
     const subjectsSummary = computed(() => {
         const map = new Map(subjects.value.map(subject => [
             subject.id,
             Object.assign({}, subject, { done: 0, total: 0 })
         ]));
-        items.value.forEach(item => {
+        items.value.filter(item => item.confirmed).forEach(item => {
             const subject = map.get(item.public.subject);
             if (!subject) {
                 console.error(`Subject ${item.public.subject} not found`);
@@ -62,11 +63,12 @@ export const useItemsStore = defineStore("items", () => {
     }
 
     async function refreshItems() {
-        const networkStore = useNetworkStore();
+        const network = useNetworkStore();
         await refreshSubjects();
-        const response = await networkStore.client.items.list.query();
+        const response = await network.client.items.list.query();
         if (response.status === 200) {
-            items.value = response.body
+            items.value = response.body;
+            itemsLoading.value = false;
         } else {
             console.error(response.status);
             alert("Failed to fetch items");
@@ -74,8 +76,8 @@ export const useItemsStore = defineStore("items", () => {
     }
 
     async function refreshSubjects() {
-        const networkStore = useNetworkStore();
-        const response = await networkStore.client.subjects.list.query();
+        const network = useNetworkStore();
+        const response = await network.client.subjects.list.query();
         if (response.status === 200) {
             subjects.value = response.body;
         } else {
@@ -85,8 +87,8 @@ export const useItemsStore = defineStore("items", () => {
     }
 
     async function updateItem(item: ItemsUpdate) {
-        const networkStore = useNetworkStore();
-        const response = await networkStore.client.items.update.mutation({
+        const network = useNetworkStore();
+        const response = await network.client.items.update.mutation({
             body: item,
         });
         if (response.status === 200) {
@@ -100,6 +102,9 @@ export const useItemsStore = defineStore("items", () => {
                     }
                     if (userItem.estimateMinutes !== undefined) {
                         items.value[index].estimateMinutes = userItem.estimateMinutes;
+                    }
+                    if (userItem.confirmed !== undefined) {
+                        items.value[index].confirmed = userItem.confirmed;
                     }
                 } else {
                     console.error(`Item ${userItem.id} not found`);
@@ -125,8 +130,8 @@ export const useItemsStore = defineStore("items", () => {
     }
 
     async function addItem(publicItem: RawPublicItem, userItem: RawUserItem) {
-        const networkStore = useNetworkStore();
-        const response = await networkStore.client.items.create.mutation({
+        const network = useNetworkStore();
+        const response = await network.client.items.create.mutation({
             body: {
                 publicItem,
                 userItem,
@@ -194,6 +199,7 @@ export const useItemsStore = defineStore("items", () => {
 
     return {
         items,
+        itemsLoading,
         itemsSorted,
         subjects,
         subjectsSummary,

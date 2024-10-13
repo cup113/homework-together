@@ -13,7 +13,8 @@ export interface ServerToClientEvents {
     // itemAdded(item: Item): void;
     // itemUpdated(item: ItemsUpdate): void;
     // itemsDeleted(ids: string[]): void;
-    refresh(except: string): void;
+    info(version: string): void;
+    refresh(except: string, sources: ['auth'] | ('items' | 'share')[]): void;
     progressUpdated(data: ProgressChange): void;
     // userJoined(user: UsersResponse): void;
 

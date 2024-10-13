@@ -17,26 +17,22 @@ export class QueryOrganizationRoute extends RouteBase<OrganizationsResponse[], n
 }
 
 export class EnterOrganizationRoute extends RouteBase<OrganizationsResponse, 400 | 401> {
-    private token: string | undefined;
     private organizationId: string;
 
-    constructor(token: string | undefined, organizationId: string) {
+    constructor(authorization: string | undefined, organizationId: string) {
         super();
-        this.token = token;
+        this.authorization = authorization;
         this.organizationId = organizationId;
     }
 
     public async handle() {
-        if (!this.token) {
-            return this.error('Unauthorized', 401);
-        }
-        const authResult = await this.auth(this.token);
+        const authResult = await this.auth();
         if (authResult instanceof Error) {
             return authResult;
         }
         try {
             const result = await this.db.enterOrganization(authResult.record.id, this.organizationId);
-            this.io().to(result.id).emit("refresh", authResult.record.id);
+            this.io().to(result.id).emit("refresh", authResult.record.id, ["share"]);
             return this.success(result);
         } catch (error) {
             return this.convertError(error, [400]);
@@ -45,20 +41,15 @@ export class EnterOrganizationRoute extends RouteBase<OrganizationsResponse, 400
 }
 
 export class CreateOrganizationRoute extends RouteBase<OrganizationsResponse, 400 | 401> {
-    private token: string | undefined;
     private organization: RawOrganization;
 
-    constructor(token: string | undefined, organization: RawOrganization) {
-        super();
-        this.token = token;
+    constructor(authorization: string | undefined, organization: RawOrganization) {
+        super(authorization);
         this.organization = organization;
     }
 
     public async handle() {
-        if (!this.token) {
-            return this.error('Unauthorized', 401);
-        }
-        const authResult = await this.auth(this.token);
+        const authResult = await this.auth();
         if (authResult instanceof Error) {
             return authResult;
         }
@@ -72,11 +63,8 @@ export class CreateOrganizationRoute extends RouteBase<OrganizationsResponse, 40
 }
 
 export class GetProgressRoute extends RouteBase<SharedProgress, 401 | 404> {
-    private token: string | undefined;
-
-    constructor(token: string | undefined) {
-        super();
-        this.token = token;
+    constructor(authorization: string | undefined) {
+        super(authorization);
     }
 
     private get_map_or_create<T>(map: Map<string, T>, key: string, createValue: () => T): T {
@@ -103,10 +91,7 @@ export class GetProgressRoute extends RouteBase<SharedProgress, 401 | 404> {
     }
 
     public async handle() {
-        if (!this.token) {
-            return this.error('Unauthorized', 401);
-        }
-        const authResult = await this.auth(this.token);
+        const authResult = await this.auth();
         if (authResult instanceof Error) {
             return authResult;
         }
