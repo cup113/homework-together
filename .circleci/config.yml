@@ -19,6 +19,8 @@ jobs:
       - run:
           name: Run tests
           command: python run.py --test
+      - store_test_results:
+          path: coverage
       - save_cache:
           key: pocketbase
           paths:
