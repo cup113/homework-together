@@ -55,10 +55,10 @@ def run_pocket_base():
     return pocket_base
 
 
-def run_vitest():
+def run_vitest(watch: bool):
     pnpm = which("pnpm")
     assert pnpm is not None, "PNPM not found"
-    return general_popen(pnpm, "run", "test", cwd=ROOT)
+    return general_popen(pnpm, "run", "test", "watch" if watch else "run", cwd=ROOT)
 
 
 def all_wait(*wait_list: Popen[bytes]):
@@ -108,6 +108,11 @@ def main():
         help="Run tests",
     )
     parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Watch for changes and trigger tests",
+    )
+    parser.add_argument(
         "--production", "--prod", action="store_true", help="Run in production mode"
     )
 
@@ -126,7 +131,7 @@ def main():
     elif args.test:
         pocket_base = run_pocket_base()
         try:
-            run_vitest().wait()
+            run_vitest(bool(args.watch)).wait()
         finally:
             pocket_base.terminate()
     else:

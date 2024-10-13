@@ -12,6 +12,8 @@ export default mergeConfig(
       coverage: {
         enabled: true,
       },
+      reporters: ['default', 'junit'],
+      outputFile: './coverage/junit.xml',
     }
   })
 )
