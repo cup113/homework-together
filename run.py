@@ -54,6 +54,12 @@ def run_pocket_base():
     return general_popen(ROOT / "pocketbase.exe", "serve")
 
 
+def run_vitest():
+    pnpm = which("pnpm")
+    assert pnpm is not None, "PNPM not found"
+    return general_popen(pnpm, "run", "test", cwd=ROOT)
+
+
 def all_wait(*wait_list: Popen[bytes]):
     for p in wait_list:
         code = p.wait()
@@ -96,6 +102,11 @@ def main():
         help="Generate TypeScript types for PocketBase",
     )
     parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Run tests",
+    )
+    parser.add_argument(
         "--production", "--prod", action="store_true", help="Run in production mode"
     )
 
@@ -111,6 +122,12 @@ def main():
     elif args.gen_type:
         pocket_base = run_pocket_base()
         pocket_base.terminate()
+    elif args.test:
+        pocket_base = run_pocket_base()
+        try:
+            run_vitest().wait()
+        finally:
+            pocket_base.terminate()
     else:
         processes = list(run_express_server("production" if args.production else "development"))
         if args.production:

@@ -38,6 +38,10 @@ export class DBService {
         });
     }
 
+    public async removeUser(userId: string) {
+        return await this.pb.collection('users').delete(userId);
+    }
+
     public async listUsers(): Promise<UsersResponse[]> {
         return await this.pb.collection('users').getFullList();
     }
@@ -67,7 +71,7 @@ export class DBService {
                 user: userId,
                 publicItem: publicItem.id,
                 estimateMinutes: publicItem.estimateMinutes,
-                confirmed: false,
+                confirmed: publicItem.range === "all",
                 progress: 0,
             } as UserItemsRecord, {
                 requestKey: publicItem.id,
@@ -138,7 +142,7 @@ export class DBService {
                     estimateMinutes: publicItem.estimateMinutes,
                     publicItem: publicResult.id,
                     user: user.id,
-                    confirmed: false,
+                    confirmed: publicItem.range === "all",
                     progress: 0,
                 } as UserItemsRecord, {
                     requestKey: user.id,
