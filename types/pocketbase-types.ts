@@ -77,6 +77,7 @@ export type UserItemsRecord = {
 export type UsersRecord = {
 	avatar?: string
 	goal?: IsoDateString
+	lastActive?: IsoDateString
 	lastCheck?: IsoDateString
 	name?: string
 	organizations?: RecordIdString[]

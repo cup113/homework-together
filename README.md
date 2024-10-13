@@ -43,6 +43,7 @@ Do homework together with your friends!
 - [ ] Delete Item Confirmation
 - [ ] Add snap points feature
 - [ ] Transition animation
+- [ ] Add lastActive
 - [ ] Socket.io Progress update
 
 ### v0.2
