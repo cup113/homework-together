@@ -13,7 +13,7 @@ export default mergeConfig(
         enabled: true,
       },
       reporters: ['default', 'junit'],
-      outputFile: './coverage/junit.xml',
+      outputFile: './coverage/junit/junit.xml',
     }
   })
 )
