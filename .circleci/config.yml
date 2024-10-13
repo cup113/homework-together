@@ -12,9 +12,17 @@ jobs:
       - node/install-packages:
           cache-path: ~/project/node_modules
           override-ci-command: pnpm install
+      - restore_cache:
+          key: pocketbase
+      - run:
+          command: curl -L https://github.com/pocketbase/pocketbase/releases/download/v0.22.21/pocketbase_0.22.21_linux_amd64.zip -o pocketbase.zip; unzip -o pocketbase.zip pocketbase; mv pocketbase pocketbase.exe
       - run:
           name: Run tests
           command: python run.py --test
+      - save_cache:
+          key: pocketbase
+          paths:
+            - ./pocketbase.exe
   build-node:
     # Build node project
     executor: node/default
