@@ -41,6 +41,7 @@ def build_client():
 def run_pocket_base():
     pnpx = which("pnpx")
     assert pnpx is not None, "PNPX not found"
+    pocket_base = general_popen(ROOT / "pocketbase.exe", "serve")
     all_wait(
         general_popen(
             pnpx,
@@ -51,7 +52,7 @@ def run_pocket_base():
             ROOT / "types" / "pocketbase-types.ts",
         )
     )
-    return general_popen(ROOT / "pocketbase.exe", "serve")
+    return pocket_base
 
 
 def run_vitest():
