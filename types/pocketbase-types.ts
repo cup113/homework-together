@@ -81,6 +81,8 @@ export type UsersRecord = {
 	lastCheck?: IsoDateString
 	name?: string
 	organizations?: RecordIdString[]
+	workingOn?: RecordIdString
+	workingOnSince?: IsoDateString
 }
 
 // Response types include system fields and match responses from the PocketBase API

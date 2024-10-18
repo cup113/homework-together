@@ -16,6 +16,7 @@ const props = defineProps<SliderRootProps & { class?: HTMLAttributes['class'] } 
   maxName?: string;
   avgProgress?: number;
   snapPoints?: number[];
+  animationDuration?: number;
 }>()
 const DEFAULT_SNAP_POINTS = [0, 20, 40, 50, 60, 80, 90, 95, 100];
 
@@ -48,7 +49,11 @@ const currentPercentage = computed(() => {
   }
 })
 
-const delegatedProps = computed(() => omit(props, ['class']))
+const animationStyle = computed(() => {
+  return props.animationDuration  ? { '--animation-duration': `${props.animationDuration}ms` } : {};
+})
+
+const delegatedProps = computed(() => omit(props, ['class', 'maxName', 'maxProgress', 'avgProgress', 'animationDuration']))
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
@@ -67,7 +72,7 @@ watch(() => props.modelValue, newValue => {
 </script>
 
 <template>
-  <div class="flex" :class="disabled ? 'gap-0.5' : 'gap-3'">
+  <div class="flex" :class="disabled ? 'gap-0.5' : 'gap-4'">
     <Popover v-if="maxProgress !== undefined || avgProgress !== undefined">
       <PopoverTrigger>
         <Icon icon="raphael:info" />
@@ -82,8 +87,8 @@ watch(() => props.modelValue, newValue => {
       'relative flex w-full touch-none select-none items-center',
       props.class,
     )" v-bind="forwarded">
-      <SliderTrack class="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
-        <SliderRange class="absolute h-full bg-lime-800" :class="{ 'progress-transition': disabled }" />
+      <SliderTrack class="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary border-slate-700" :class="{ 'border-2': animationDuration !== undefined }">
+        <SliderRange class="absolute h-full bg-lime-800" :style="animationStyle" :class="{ 'progress-transition': disabled, 'animation': animationDuration !== undefined }" />
         <span v-for="snapPoint in snapPoints" :key="snapPoint" class="absolute block h-full bg-slate-500 opacity-20"
           :style="{ width: '1px', left: `calc(${snapPoint}% - 1px)` }"></span>
         <span class="absolute block h-full bg-amber-500 opacity-70 progress-transition" :style="avgStyle"></span>
@@ -94,3 +99,20 @@ watch(() => props.modelValue, newValue => {
     </SliderRoot>
   </div>
 </template>
+
+<style scoped>
+.animation {
+  animation: progress-bar-stripes var(--animation-duration, 2s) linear infinite;
+  background-size: 40px 40px;
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.25) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 75%, transparent 75%, transparent);
+}
+
+@keyframes progress-bar-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 40px 0;
+  }
+}
+</style>

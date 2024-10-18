@@ -68,7 +68,13 @@ export default abstract class RouteBase<T, ErrorCode extends HTTPStatusCode> {
         }
         const token = this.authorization.slice("Bearer ".length);
         try {
-            return this.db.authWithToken(token);
+            const authResponse = await this.db.authWithToken(token);
+            const updated = await this.db.updateUserActivity(authResponse.record.id);
+            this.io().to(authResponse.record.organizations).emit('userUpdated', {
+                id: authResponse.record.id,
+                lastActive: updated.lastActive,
+            });
+            return authResponse;
         } catch {
             return new RouteError("Invalid token", 401)
         }

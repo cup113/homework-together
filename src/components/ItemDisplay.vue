@@ -36,6 +36,7 @@ const source = computed(() => {
             some: '部分',
             private: '个人',
         }[props.item.public.range]),
+        isWorkedOn: shareStore.sharedProgress.users.some(u => u.id === userStore.user.id && u.workingOn === props.item.publicItem),
     };
 });
 const sharedProgress = computed(() => {
@@ -60,22 +61,59 @@ const sharedProgress = computed(() => {
     };
 });
 
-const urgency = computed(() => {
-    if (props.item.public.deadline === undefined) {
-        return 0;
+// const URGENCY_POINTS = [-1440, -480, 0, 15, 60, 180, 480, 1440, 4320, 10080]
+const URGENCY_POINTS = [
+    [0, '#edcbc0'],
+    [120, '#f7e6ca'],
+    [1440, '#cfe3ec'],
+    [4320, '#b1cfd9'],
+] as const;
+
+const remainingMinutes = computed(() => dayjs(props.item.public.deadline).diff(dayjs(itemsStore.now), 'minutes'));
+
+const shortRemaining = computed(() => {
+    if (cache.progress[0] === 100) {
+        return '√';
     }
-    const diff = dayjs(props.item.public.deadline).diff(dayjs(), 'days');
-    return 1 / (1 + Math.exp((diff - 0.5) / 2));
+    const minutes = Math.ceil(remainingMinutes.value);
+    if (minutes < 0) {
+        return '>_<';
+    }
+    if (minutes <= 99) {
+        return minutes.toString() + 'm';
+    }
+    const hours = Math.floor(minutes / 60);
+    if (hours <= 99) {
+        return hours.toString() + 'h';
+    }
+    const days = Math.floor(hours / 24);
+    return days.toString() + 'd';
 });
 
-const color = computed(() => {
-    const leastUrgentColor = [0, 179, 80];
-    const mostUrgentColor = [255, 0, 0];
-
-    const color = [0, 1, 2].map(i => leastUrgentColor[i] + (mostUrgentColor[i] - leastUrgentColor[i]) * urgency.value).map(v => v.toFixed(0));
-
-    return `rgb(${color.join(',')})`;
+const backgroundColor = computed(() => {
+    if (cache.progress[0] === 100) {
+        return '#99c1a9';
+    }
+    return URGENCY_POINTS.find(d => d[0] >= remainingMinutes.value)?.[1] ?? '#b6d5c5';
 });
+
+const animationDuration = computed(() => {
+    const animationPoints = shareStore.sharedProgress.users.map(user => user.workingOn).filter(id => id === props.item.publicItem).length + (source.value.isWorkedOn ? 2 : 0);
+    if (animationPoints === 0) {
+        return undefined;
+    }
+    return Math.ceil(10_000 / animationPoints);
+});
+
+const workOnColor = computed(() => {
+    if (source.value.isWorkedOn) {
+        return 'blue';
+    } else if (animationDuration.value === undefined) {
+        return 'gray';
+    } else {
+        return 'purple'
+    }
+})
 
 const cache = reactive({
     progress: [props.item.progress * 100],
@@ -197,13 +235,29 @@ watch(() => props.item.public.description, (newValue, oldValue) => {
         cache.description = newValue;
     }
 });
+
+watch(() => cache.progress[0], newProgress => {
+    if (newProgress === 100 && source.value.isWorkedOn) {
+        userStore.work_on(undefined);
+    }
+})
+
+function toggle_work_on() {
+    if (!source.value.isWorkedOn) {
+        userStore.work_on(props.item.publicItem);
+    } else {
+        userStore.work_on(undefined);
+    }
+}
 </script>
 
 <template>
     <div class="rounded-lg hover:bg-slate-50 px-3 pt-1 border-t border-slate-300 flex flex-col transition-colors duration-300 ease-in-out"
         :class="{ 'bg-lime-50': cache.progress[0] === 100 }">
         <div class="flex w-full gap-2 items-center">
-            <span class="text-sm font-bold" :style="{ color }">{{ source.index }}</span>
+            <div>
+                <div class="text-sm font-bold inline-block">{{ source.index }}</div>
+            </div>
             <Badge class="flex flex-row items-center h-6 font-mono">
                 <div>{{ source.subject?.abbr }}</div>
             </Badge>
@@ -282,18 +336,19 @@ watch(() => props.item.public.description, (newValue, oldValue) => {
             </DropdownMenu>
         </div>
         <div class="flex w-full items-center my-1" v-if="item.confirmed">
+            <div class="text-xs inline-block text-white py-0.5 rounded-full font-mono relative w-8 text-center mr-2"
+                :style="{ backgroundColor }">{{ shortRemaining }}</div>
             <div class="flex-grow">
                 <ProgressSlider v-model="cache.progress" :min="0" :max="100" :step="1"
                     :max-progress="sharedProgress.max" :avg-progress="sharedProgress.avg"
-                    :max-name="sharedProgress.maxName">
+                    :max-name="sharedProgress.maxName" :animation-duration="animationDuration">
                 </ProgressSlider>
             </div>
             <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">
                 {{ cache.progress[0].toFixed(0) }}% -{{ itemsStore.toHumanTime(etaMinutes) }}</div>
             <div>
-                <Button class="h-4 px-1 py-1 bg-cyan-600 hover:bg-cyan-700 active:bg-cyan-800"
-                    @click="updateProgress(100)">
-                    <Icon icon="charm:square-tick" />
+                <Button variant="ghost" class="h-4 p-0 hover:bg-slate-200" @click="toggle_work_on">
+                    <Icon icon="ph:record-bold" :color="workOnColor" />
                 </Button>
             </div>
         </div>

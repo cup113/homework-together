@@ -96,7 +96,9 @@ export class GetProgressRoute extends RouteBase<SharedProgress, 401 | 404> {
             return authResult;
         }
         try {
-            const items = await this.db.getUserItems(undefined);
+            const items = await this.db.getUserItems(authResult.record.id, {
+                thisUserOnly: false,
+            });
             const mapItems = new Map<string, Map<string, [number, number]>>();
             const mapSubjects = new Map<string, Map<string, [number, number]>>();
             const mapOverall = new Map<string, [number, number]>();

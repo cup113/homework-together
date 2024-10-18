@@ -46,6 +46,10 @@ export class DBService {
         return await this.pb.collection('users').getFullList();
     }
 
+    public async updateUser(userId: string, data: Partial<UsersRecord>) {
+        return await this.pb.collection('users').update(userId, data);
+    }
+
     public async registerOrganization(userId: string, organizationData: RawOrganization) {
         return await this.pb.collection('organizations').create({
             ...organizationData,
@@ -112,16 +116,20 @@ export class DBService {
     }
 
     public async updateUserActivity(userId: string) {
-        await this.pb.collection('users').update(userId, {
+        return await this.pb.collection('users').update(userId, {
             lastActive: dayjs().toISOString().replace("T", " "),
         } as Required<Pick<UsersRecord, 'lastActive'>>);
     }
 
-    public async getUserItems(userId?: string): Promise<Item[]> {
+    public async getUserItems(userId: string, _config: {
+        thisUserOnly: boolean,
+    }): Promise<Item[]> {
+        const config = Object.assign({}, _config ?? {});
+
         const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsResponse }>>(Object.assign({
             expand: "publicItem",
-        }, userId ? { filter: `user.id = "${userId}"` } : {
-            filter: `user.lastActive >= created && confirmed = true`
+        }, config.thisUserOnly ? { filter: `user.id = "${userId}"` } : {
+            filter: `user.id = "${userId}" || (user.lastActive >= created && confirmed = true)`
         }));
         return Promise.all(items.map(async item => {
             const { expand, ...rest } = item;

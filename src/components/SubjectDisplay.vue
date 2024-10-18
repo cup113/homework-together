@@ -4,13 +4,14 @@ import { useItemsStore } from '@/stores/items';
 import { useShareStore } from '@/stores/share';
 
 import ProgressSlider from '@/components/ProgressSlider.vue';
-import { TableRow, TableCell } from '@/components/ui/table';
 import type { Subject } from '@/../types/contract';
+import { useUserStore } from '@/stores/user';
 
 const props = defineProps<{
     subject: Subject & { done: number, total: number };
 }>();
 
+const userStore = useUserStore();
 const itemsStore = useItemsStore();
 const shareStore = useShareStore();
 
@@ -36,6 +37,24 @@ const sharedProgress = computed(() => {
     };
 });
 
+const animationDuration = computed(() => {
+    let animationPoints = 0;
+    const subjectItems = itemsStore.items.filter(i => i.public.subject === props.subject.id).map(i => i.publicItem);
+    shareStore.sharedProgress.users.forEach(u => {
+        if (subjectItems.includes(u.workingOn)) {
+            animationPoints++;
+            if (u.id === userStore.user.id) {
+                animationPoints += 2;
+            }
+        }
+    });
+    if (animationPoints === 0) {
+        return undefined;
+    }
+
+    return Math.ceil(20_000 / animationPoints);
+});
+
 const doneValue = computed({
     get() { return [props.subject.done] },
     set() { }
@@ -43,12 +62,12 @@ const doneValue = computed({
 </script>
 
 <template>
-    <TableRow>
-        <TableCell>{{ subject.name }}</TableCell>
-        <TableCell>
+    <div class="flex items-center gap-3 px-2 py-2 border-b border-slate-200" :class="{ 'bg-lime-50': subject.done === subject.total }">
+        <div>{{ subject.name }}</div>
+        <div class="grow">
             <ProgressSlider disabled v-model="doneValue" :max="subject.total" :max-progress="sharedProgress.max"
-                :max-name="sharedProgress.maxName" :avg-progress="sharedProgress.avg"></ProgressSlider>
-            <span>{{ itemsStore.toHumanTime(subject.done) }} / {{ itemsStore.toHumanTime(subject.total) }}</span>
-        </TableCell>
-    </TableRow>
+                :max-name="sharedProgress.maxName" :avg-progress="sharedProgress.avg" :animation-duration="animationDuration"></ProgressSlider>
+            <div class="ml-4 text-slate-500">{{ itemsStore.toHumanTime(subject.done) }} / {{ itemsStore.toHumanTime(subject.total) }}</div>
+        </div>
+    </div>
 </template>

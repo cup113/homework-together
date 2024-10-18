@@ -110,6 +110,17 @@ const authContract = c.router({
         body: z.object({}),
         summary: "Check the user's authentication status, refresh the token if necessary, and synchronize the user's organizations",
     },
+    working: {
+        method: 'PUT',
+        path: '/api/v1/auth/working',
+        responses: {
+            200: c.type<true>(),
+            401: ErrorType,
+        },
+        body: z.object({
+            workingOnItemId: z.optional(ID),
+        }),
+    }
 });
 
 const itemsContract = c.router({

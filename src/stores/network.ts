@@ -85,6 +85,17 @@ export const useNetworkStore = defineStore("network", () => {
             const shareStore = useShareStore();
             shareStore.update_progress(data);
         });
+
+        socket.on('userUpdated', user => {
+            const shareStore = useShareStore();
+            const { id, ...userDiff } = user;
+            const index = shareStore.sharedProgress.users.findIndex(user => user.id === id);
+            if (index === -1) {
+                shareStore.refreshProgress();
+            } else {
+                Object.assign(shareStore.sharedProgress.users[index], userDiff);
+            }
+        })
     }
 
     return {

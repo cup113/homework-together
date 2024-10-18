@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import RouteService from '../services/route.mjs';
 import type { UserAuth, UserInfo } from '../types/contract.js'
 
@@ -58,6 +59,38 @@ export class CheckUserRoute extends RouteService<UserInfo, 401> {
         } catch (e) {
             this.logger.info(`Error while getting user info: ${e}`);
             return this.error("Unauthorized", 401)
+        }
+    }
+}
+
+export class UpdateUserWorkingRoute extends RouteService<true, 401> {
+    private workingOnItemId: string | undefined;
+
+    constructor(authorization: string | undefined, workingOnItemId: string | undefined) {
+        super(authorization);
+        this.workingOnItemId = workingOnItemId;
+    }
+
+    protected async handle() {
+        try {
+            const authResult = await this.auth();
+            if (authResult instanceof Error) {
+                return authResult;
+            }
+            const userId = authResult.record.id;
+
+            const update = this.workingOnItemId ? {
+                workingOn: this.workingOnItemId,
+                workingOnSince: dayjs().toISOString().replace('T', ' '),
+            } : { workingOn: '' };
+
+            await this.db.updateUser(userId, update);
+            this.io().to(authResult.record.organizations).emit('userUpdated', Object.assign({ id: userId }, update));
+            return this.success(true);
+
+        } catch (e) {
+            this.logger.info(`Error while updating user info: ${e}`);
+            return this.error("Unauthorized", 401);
         }
     }
 }

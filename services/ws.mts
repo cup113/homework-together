@@ -24,6 +24,7 @@ export function initIO(server: SocketServer) {
             const user = (await db.authWithToken(token)).record;
             socket.data.user = user;
             socket.join(user.organizations);
+            io().to(user.organizations).emit('refresh', user.id, ['share']);
         }
     });
 }

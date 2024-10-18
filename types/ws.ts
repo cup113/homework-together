@@ -1,7 +1,6 @@
 import type { Server } from "socket.io";
 import type { Socket } from 'socket.io-client';
 import type { UsersResponse } from "./pocketbase-types.js";
-import type { ItemsCreate, ItemsUpdate, Item } from "./contract.js";
 
 export interface ProgressChange {
     itemId: string;
@@ -14,18 +13,10 @@ export interface ServerToClientEvents {
     info(version: string): void;
     refresh(except: string, sources: ('items' | 'share')[]): void;
     progressUpdated(data: ProgressChange): void;
-    userJoined(user: UsersResponse): void;
-    itemsDeleted(ids: string[]): void;
-    itemCreated(item: Item): void;
+    userUpdated(user: Partial<UsersResponse> & Pick<UsersResponse, 'id'>): void;
 }
 
-export type ClientToServerEvents = {
-    updateItem(item: ItemsUpdate, callback: (error?: string) => void): void;
-    createItem(item: ItemsCreate): void;
-    deleteItems(ids: string[], type: "user" | "public"): void;
-
-    received(): void;
-}
+export type ClientToServerEvents = object;
 
 export type InterServerEvents = object;
 

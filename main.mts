@@ -10,7 +10,7 @@ import { Server } from "socket.io";
 
 import contract from './types/contract.js';
 import loggerService from './services/logger.mjs'
-import { LoginRoute, RegisterRoute, CheckUserRoute } from './routes/auth.mjs';
+import { LoginRoute, RegisterRoute, CheckUserRoute, UpdateUserWorkingRoute } from './routes/auth.mjs';
 import { CreateItemRoute, GetItemRoute, UpdateItemRoute, DeleteItemsRoute } from './routes/items.mjs'
 import { ListSubjectsRoute } from './routes/subjects.mjs';
 import { CreateOrganizationRoute, QueryOrganizationRoute, EnterOrganizationRoute, GetProgressRoute } from './routes/organizations.mjs';
@@ -38,6 +38,9 @@ const router = serverRouter.router(contract, {
         },
         check({ headers: { authorization } }) {
             return new CheckUserRoute(authorization).getResponse();
+        },
+        working({ headers: { authorization }, body: { workingOnItemId } }) {
+            return new UpdateUserWorkingRoute(authorization, workingOnItemId).getResponse();
         }
     },
     items: {

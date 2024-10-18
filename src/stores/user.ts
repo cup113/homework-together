@@ -78,7 +78,7 @@ export const useUserStore = defineStore('user', () => {
       token.value = response.body.token;
       user.value.id = response.body.id;
       user.value.username = response.body.username;
-      location.assign('/');
+      location.assign('/manage');
     } else {
       alert('Login failed.');
       return false;
@@ -142,6 +142,19 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  async function work_on(workingOnItemId?: string) {
+    const network = useNetworkStore();
+    const response = await network.client.auth.working.mutation({
+      body: { workingOnItemId },
+    });
+    if (response.status !== 200) {
+      console.error(response.body);
+      alert('Failed to work on item.');
+      return false;
+    }
+    return true;
+  }
+
   nextTick(() => {
     check();
   });
@@ -159,5 +172,6 @@ export const useUserStore = defineStore('user', () => {
     query_organizations,
     join_organization,
     create_organization,
+    work_on,
   }
 });

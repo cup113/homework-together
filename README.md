@@ -40,29 +40,36 @@ Do homework together with your friends!
 
 ### v0.1
 
-- [ ] Polish lastActive mechanism (re-update)
-- [ ] Socket.io Progress update
-- [ ] Delete Item Confirmation
-- [ ] Add snap points feature
-- [ ] Transition animation
+- [x] Polish lastActive mechanism
+- [x] Refactor leaderboard
+- [x] "Working on" feature
 
 ### v0.2
 
-- [ ] Handle Errors
 - [ ] Responsive design
-- [ ] Add Goal system
+- [ ] Delete Item Confirmation
+- [ ] Transition animation
+- [ ] Add snap points feature
 
 ### v0.3
 
-- [ ] Add user management (email registration, reset password, etc.)
-- [ ] Add Organization management
+- [ ] Add Goal system
+- [ ] Handle Errors
 - [ ] Add note system
-- [ ] Updated Item: Organization, range, publicEstimate
+- [ ] Add user management (email registration, reset password, etc.)
 
 ### v0.4
 
+- [ ] Add Organization management
+- [ ] Updated Item: Organization, range, publicEstimate
+
+### v0.5
+
 - [ ] Add pagination & filter in homework list
 - [ ] Undo & Redo System
+
+### v0.6
+
 - [ ] Add customization
 - [ ] Add Subject belonging to organization
 - [ ] Add Comment & Request system
