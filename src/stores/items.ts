@@ -63,6 +63,39 @@ export const useItemsStore = defineStore("items", () => {
         return `${h}:${m}`;
     }
 
+    function convertSnapPoints(original: string) {
+        // Example: 3*2+1 -> [3, 3, 1]
+        const units = original.replace(/\s/g, '').split('+');
+        const points = [];
+        for (const unit of units) {
+            const splitted = unit.split('*');
+            const num = parseInt(splitted[0]);
+            if (splitted.length === 2) {
+                const times = parseInt(splitted[1]);
+                for (let i = 0; i < times; i++) {
+                    points.push(num);
+                }
+            } else {
+                points.push(num);
+            }
+        }
+
+        let acc = 0;
+        const result = new Array<number>();
+        const appeared = new Set<string>();
+        points.forEach(point => {
+            acc += point;
+            result.push(acc);
+        });
+        return result.map(point => (point / acc * 100).toFixed(0)).filter(point => {
+            if (appeared.has(point)) {
+                return false;
+            }
+            appeared.add(point);
+            return true;
+        }).join(',');
+    }
+
     const now = useNow({ interval: 1000 });
 
     async function refreshItems() {
@@ -209,6 +242,7 @@ export const useItemsStore = defineStore("items", () => {
         subjectsSummary,
         summary,
         toHumanTime,
+        convertSnapPoints,
         addItem,
         deleteItems,
         deleteOutdated,

@@ -49,7 +49,7 @@ Do homework together with your friends!
 - [ ] Responsive design
 - [ ] Delete Item Confirmation
 - [ ] Transition animation
-- [ ] Add snap points feature
+- [ ] Complete snap points feature
 
 ### v0.3
 

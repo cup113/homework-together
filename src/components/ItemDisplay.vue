@@ -37,6 +37,7 @@ const source = computed(() => {
             private: '个人',
         }[props.item.public.range]),
         isWorkedOn: shareStore.sharedProgress.users.some(u => u.id === userStore.user.id && u.workingOn === props.item.publicItem),
+        snapPoints: props.item.public.snaps ? props.item.public.snaps.split(',').map(s => parseInt(s)) : undefined,
     };
 });
 const sharedProgress = computed(() => {
@@ -97,22 +98,20 @@ const backgroundColor = computed(() => {
     return URGENCY_POINTS.find(d => d[0] >= remainingMinutes.value)?.[1] ?? '#b6d5c5';
 });
 
-const animationDuration = computed(() => {
-    const animationPoints = shareStore.sharedProgress.users.map(user => user.workingOn).filter(id => id === props.item.publicItem).length + (source.value.isWorkedOn ? 2 : 0);
+const animation = computed(() => {
+    const stressed = source.value.isWorkedOn;
+    const animationPoints = shareStore.sharedProgress.users.map(user => user.workingOn).filter(id => id === props.item.publicItem).length + (stressed ? 2 : 0);
     if (animationPoints === 0) {
         return undefined;
     }
-    return Math.ceil(10_000 / animationPoints);
+    return {
+        duration: Math.ceil(10_000 / animationPoints),
+        stressed,
+    };
 });
 
 const workOnColor = computed(() => {
-    if (source.value.isWorkedOn) {
-        return 'blue';
-    } else if (animationDuration.value === undefined) {
-        return 'gray';
-    } else {
-        return 'purple'
-    }
+    return source.value.isWorkedOn ? 'blue' : 'gray';
 })
 
 const cache = reactive({
@@ -341,7 +340,7 @@ function toggle_work_on() {
             <div class="flex-grow">
                 <ProgressSlider v-model="cache.progress" :min="0" :max="100" :step="1"
                     :max-progress="sharedProgress.max" :avg-progress="sharedProgress.avg"
-                    :max-name="sharedProgress.maxName" :animation-duration="animationDuration">
+                    :max-name="sharedProgress.maxName" :animation="animation" :snap-points="source.snapPoints">
                 </ProgressSlider>
             </div>
             <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">

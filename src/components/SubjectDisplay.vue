@@ -37,13 +37,15 @@ const sharedProgress = computed(() => {
     };
 });
 
-const animationDuration = computed(() => {
+const animation = computed(() => {
     let animationPoints = 0;
+    let stressed = false;
     const subjectItems = itemsStore.items.filter(i => i.public.subject === props.subject.id).map(i => i.publicItem);
     shareStore.sharedProgress.users.forEach(u => {
         if (subjectItems.includes(u.workingOn)) {
             animationPoints++;
             if (u.id === userStore.user.id) {
+                stressed = true;
                 animationPoints += 2;
             }
         }
@@ -52,7 +54,10 @@ const animationDuration = computed(() => {
         return undefined;
     }
 
-    return Math.ceil(20_000 / animationPoints);
+    return {
+        duration: Math.ceil(15_000 / animationPoints),
+        stressed,
+    };
 });
 
 const doneValue = computed({
@@ -66,7 +71,7 @@ const doneValue = computed({
         <div>{{ subject.name }}</div>
         <div class="grow">
             <ProgressSlider disabled v-model="doneValue" :max="subject.total" :max-progress="sharedProgress.max"
-                :max-name="sharedProgress.maxName" :avg-progress="sharedProgress.avg" :animation-duration="animationDuration"></ProgressSlider>
+                :max-name="sharedProgress.maxName" :avg-progress="sharedProgress.avg" :animation="animation"></ProgressSlider>
             <div class="ml-4 text-slate-500">{{ itemsStore.toHumanTime(subject.done) }} / {{ itemsStore.toHumanTime(subject.total) }}</div>
         </div>
     </div>

@@ -7,6 +7,7 @@ import type { UsersResponse } from '../../types/pocketbase-types';
 import ProgressSlider from './ProgressSlider.vue';
 import MiniEditor from './MiniEditor.vue';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { useUserStore } from '@/stores/user';
 
 const props = defineProps<{
     rank: number;
@@ -15,6 +16,7 @@ const props = defineProps<{
 }>();
 
 const itemsStore = useItemsStore();
+const userStore = useUserStore();
 
 const rankString = computed(() => {
     const rank = props.rank.toString().padStart(2, '0');
@@ -68,8 +70,14 @@ const workingDescription = computed(() => {
     };
 });
 
-const animationDuration = computed(() => {
-    return props.user.workingOn ? 3000 : undefined;
+const animation = computed(() => {
+    if (!props.user.workingOn) {
+        return undefined;
+    }
+    return {
+        duration: 3000,
+        stressed: props.user.id === userStore.user.id,
+    };
 });
 
 const modelValue = computed({
@@ -88,7 +96,7 @@ const modelValueText = computed({
         <div :class="rankClass">{{ rankString }}</div>
         <div class="flex flex-col items-center grow">
             <div class="w-full">
-                <ProgressSlider disabled v-model="modelValue" :min="0" :max="100" :animation-duration="animationDuration"></ProgressSlider>
+                <ProgressSlider disabled v-model="modelValue" :min="0" :max="100" :animation="animation"></ProgressSlider>
             </div>
             <div class="flex items-center justify-between w-full">
                 <Popover>

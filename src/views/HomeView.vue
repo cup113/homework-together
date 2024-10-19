@@ -89,9 +89,9 @@ const permittedToRemoveAll = computed(() => {
             <Skeleton class="w-full h-24"></Skeleton>
           </div>
           <div class="mt-8 flex justify-between gap-4">
-            <Button @click="itemsStore.deleteOutdated('public')" variant="destructive"
+            <Button @click="itemsStore.deleteOutdated('public')" variant="destructive" class="bg-[#edcbc0] hover:bg-[#f0a381]"
               v-if="permittedToRemoveAll">清除过期作业（所有人）</Button>
-            <Button @click="itemsStore.deleteOutdated('user')" variant="destructive">清除过期作业（仅个人）</Button>
+            <Button @click="itemsStore.deleteOutdated('user')" variant="destructive" class="bg-[#edcbc0] hover:bg-[#f0a381]">清除过期作业（仅个人）</Button>
           </div>
         </div>
       </section>

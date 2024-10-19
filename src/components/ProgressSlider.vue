@@ -16,7 +16,10 @@ const props = defineProps<SliderRootProps & { class?: HTMLAttributes['class'] } 
   maxName?: string;
   avgProgress?: number;
   snapPoints?: number[];
-  animationDuration?: number;
+  animation?: {
+    duration: number;
+    stressed: boolean;
+  };
 }>()
 const DEFAULT_SNAP_POINTS = [0, 20, 40, 50, 60, 80, 90, 95, 100];
 
@@ -50,10 +53,20 @@ const currentPercentage = computed(() => {
 })
 
 const animationStyle = computed(() => {
-  return props.animationDuration  ? { '--animation-duration': `${props.animationDuration}ms` } : {};
+  return props.animation?.duration ? { '--animation-duration': `${props.animation.duration}ms` } : {};
 })
 
-const delegatedProps = computed(() => omit(props, ['class', 'maxName', 'maxProgress', 'avgProgress', 'animationDuration']))
+const trackClasses = computed(() => {
+  if (props.animation === undefined) {
+    return [];
+  } else if (props.animation.stressed) {
+    return ['border-2'];
+  } else {
+    return ['border'];
+  }
+})
+
+const delegatedProps = computed(() => omit(props, ['class', 'maxName', 'maxProgress', 'avgProgress', 'animation']))
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
@@ -86,9 +99,9 @@ watch(() => props.modelValue, newValue => {
     <SliderRoot :class="cn(
       'relative flex w-full touch-none select-none items-center',
       props.class,
-    )" v-bind="forwarded">
-      <SliderTrack class="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary border-slate-700" :class="{ 'border-2': animationDuration !== undefined }">
-        <SliderRange class="absolute h-full bg-lime-800" :style="animationStyle" :class="{ 'progress-transition': disabled, 'animation': animationDuration !== undefined }" />
+    )" v-bind="forwarded" :style="animationStyle">
+      <SliderTrack class="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary border-slate-700" :class="trackClasses">
+        <SliderRange class="absolute h-full bg-lime-800" :class="{ 'progress-transition': disabled, 'animation': props.animation !== undefined }" />
         <span v-for="snapPoint in snapPoints" :key="snapPoint" class="absolute block h-full bg-slate-500 opacity-20"
           :style="{ width: '1px', left: `calc(${snapPoint}% - 1px)` }"></span>
         <span class="absolute block h-full bg-amber-500 opacity-70 progress-transition" :style="avgStyle"></span>
@@ -103,7 +116,7 @@ watch(() => props.modelValue, newValue => {
 <style scoped>
 .animation {
   animation: progress-bar-stripes var(--animation-duration, 2s) linear infinite;
-  background-size: 40px 40px;
+  background-size: 16px 16px;
   background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.25) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 75%, transparent 75%, transparent);
 }
 
@@ -112,7 +125,7 @@ watch(() => props.modelValue, newValue => {
     background-position: 0 0;
   }
   100% {
-    background-position: 40px 0;
+    background-position: 48px 0;
   }
 }
 </style>

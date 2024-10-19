@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import dayjs from 'dayjs';
-import { useItemsStore } from '@/stores/items';
 
+import { useItemsStore } from '@/stores/items';
+import { useUserStore } from '@/stores/user';
 import { PublicItemsRangeOptions } from '@/../types/pocketbase-types';
 import MiniEditor from './MiniEditor.vue';
 import { Select, SelectTrigger, SelectValue, SelectGroup, SelectContent, SelectItem, SelectSeparator } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useUserStore } from '@/stores/user';
 
 const PERSONAL_ORGANIZATION_ID = '@PERSONAL';
 
@@ -21,6 +21,7 @@ const description = ref('<p></p>');
 const range = ref(PublicItemsRangeOptions.all);
 const estimateMinutes = ref(0);
 const deadline = ref(dayjs().format("YYYY-MM-DD" + "T" + "23:59"));
+const snapPoints = ref('');
 
 function addItem() {
     if (!subject.value) {
@@ -42,10 +43,20 @@ function addItem() {
         range: range.value,
         estimateMinutes: estimateMinutes.value,
         deadline: dayjs(deadline.value).toISOString(),
+        snaps: snapPoints.value.trim(),
     }, {
         progress: 0,
         estimateMinutes: estimateMinutes.value,
     });
+}
+
+function convertSnapPoints() {
+    try {
+        snapPoints.value = itemsStore.convertSnapPoints(snapPoints.value);
+    } catch (e) {
+        console.error(e);
+        alert('错误' + e);
+    }
 }
 
 userStore.onChecked(() => {
@@ -106,6 +117,11 @@ userStore.onChecked(() => {
                     <span>时间期限</span>
                     <Input type="datetime-local" v-model="deadline" class="w-48 h-7" />
                 </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-sm w-16">间断点</span>
+                <Input type="text" v-model="snapPoints" placeholder="例如: 2*2+1，可不填" class="h-7"/>
+                <Button class="h-7" @click="convertSnapPoints()">计算</Button>
             </div>
             <div class="flex justify-between">
                 <div class="flex gap-1 text-sm items-center flex-grow">

@@ -18,7 +18,7 @@ export const useShareStore = defineStore('share', () => {
         return Object.entries(sharedProgress.overall)
             .map(([userId, progress]) => ({ userId, done: progress[0], total: progress[1] })).sort((a, b) => b.done / b.total - a.done / a.total)
             .map(({ userId, done, total }, index) => ({
-                ...sharedProgress.users.find((user) => user.id === userId),
+                ...sharedProgress.users.find((user) => user.id === userId)!,
                 done,
                 total,
                 rank: index + 1,
