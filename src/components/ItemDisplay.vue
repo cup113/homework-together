@@ -83,7 +83,7 @@ const shortRemaining = computed(() => {
     if (minutes <= 99) {
         return minutes.toString() + 'm';
     }
-    const hours = Math.floor(minutes / 60);
+    const hours = Math.ceil(minutes / 60);
     if (hours <= 99) {
         return hours.toString() + 'h';
     }

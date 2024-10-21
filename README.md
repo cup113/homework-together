@@ -46,31 +46,44 @@ Do homework together with your friends!
 
 ### v0.2
 
+- [ ] Collapsible item editing
+- [ ] Focus timer with full screen support
+- [ ] Merge manage view
+- [ ] Fix inconsistent progress by loosing access
 - [ ] Responsive design
 - [ ] Delete Item Confirmation
-- [ ] Transition animation
-- [ ] Complete snap points feature
 
 ### v0.3
 
+- [ ] Transition animation
+- [ ] Complete snap points feature
 - [ ] Add Goal system
+
+### v0.4
+
 - [ ] Handle Errors
 - [ ] Add note system
 - [ ] Add user management (email registration, reset password, etc.)
 
-### v0.4
+### v0.5
 
 - [ ] Add Organization management
 - [ ] Updated Item: Organization, range, publicEstimate
 
-### v0.5
+### v0.6
 
+- [ ] Add newcomer guiding
 - [ ] Add pagination & filter in homework list
 - [ ] Undo & Redo System
 
-### v0.6
+### v0.7
 
 - [ ] Add customization
 - [ ] Add Subject belonging to organization
+- [ ] Parent (belonging) attribute for item
+- [ ] Leaderboard for organization
+
+### v0.8
+
 - [ ] Add Comment & Request system
 - [ ] Add Unit test

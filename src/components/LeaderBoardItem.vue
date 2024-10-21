@@ -26,12 +26,12 @@ const rankString = computed(() => {
 const rankClass = computed(() => {
     if (props.rank <= 3) {
         return {
-            1: ['text-yellow-600', 'font-bold'],
-            2: ['text-zinc-600', 'font-bold'],
-            3: ['text-amber-600', 'font-bold'],
+            1: ['text-yellow-600', 'font-bold', 'text-lg'],
+            2: ['text-zinc-600', 'font-bold', 'text-lg'],
+            3: ['text-amber-600', 'font-bold', 'text-lg'],
         }[props.rank];
     }
-    return ['text-slate-600', 'text-lg'];
+    return ['text-slate-600'];
 });
 
 const percentage = computed(() => (props.user.done / props.user.total * 100).toFixed(2));
