@@ -10,6 +10,7 @@ import { cloneDeep } from 'es-toolkit/object';
 
 import MiniEditor from '@/components/MiniEditor.vue';
 import ProgressSlider from '@/components/ProgressSlider.vue';
+import FocusDisplay from '@/components/FocusDisplay.vue';
 import { Icon } from '@iconify/vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -360,5 +361,6 @@ function toggle_work_on() {
             <Button class="h-8" @click="confirm">添加此作业</Button>
             <Button variant="destructive" class="h-8" @click="deleteUserItem">删除</Button>
         </div>
+        <FocusDisplay v-if="source.isWorkedOn"></FocusDisplay>
     </div>
 </template>
