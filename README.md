@@ -54,36 +54,42 @@ Do homework together with your friends!
 
 - [ ] Fix inconsistent progress by loosing access
 - [ ] Responsive design
-- [ ] Transition animation
 - [ ] Complete snap points feature
-- [ ] Add Goal system
-- [ ] Delete Item Confirmation
 
 ### v0.4
+
+- [ ] Transition animation
+- [ ] Delete Item Confirmation
+
+### v0.5
 
 - [ ] Handle Errors
 - [ ] Add note system
 - [ ] Add user management (email registration, reset password, etc.)
 
-### v0.5
+### v0.6
 
 - [ ] Add Organization management
 - [ ] Updated Item: Organization, range, publicEstimate
 
-### v0.6
+### v0.7
 
 - [ ] Add newcomer guiding
 - [ ] Add pagination & filter in homework list
 - [ ] Undo & Redo System
 
-### v0.7
-
-- [ ] Add customization
-- [ ] Add Subject belonging to organization
-- [ ] Parent (belonging) attribute for item
-- [ ] Leaderboard for organization
-
 ### v0.8
 
+- [ ] Add Goal system
+- [ ] Add customization
+- [ ] Add Subject belonging to organization
+- [ ] Leaderboard for organization
+
+### v0.9
+
+- [ ] Parent (belonging) attribute for item
 - [ ] Add Comment & Request system
+
+### v1.0
+
 - [ ] Add Unit test
