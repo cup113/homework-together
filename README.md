@@ -46,18 +46,18 @@ Do homework together with your friends!
 
 ### v0.2
 
-- [ ] Collapsible item editing
-- [ ] Focus timer with full screen support
-- [ ] Merge manage view
-- [ ] Fix inconsistent progress by loosing access
-- [ ] Responsive design
-- [ ] Delete Item Confirmation
+- [x] Collapsible item editing
+- [x] Focus timer with full screen support
+- [x] Merge manage view
 
 ### v0.3
 
+- [ ] Fix inconsistent progress by loosing access
+- [ ] Responsive design
 - [ ] Transition animation
 - [ ] Complete snap points feature
 - [ ] Add Goal system
+- [ ] Delete Item Confirmation
 
 ### v0.4
 

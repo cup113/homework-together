@@ -16,12 +16,13 @@ import { Icon } from '@iconify/vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import router from '@/router';
 
 const props = defineProps<{
     index: number;
     item: Item;
+    focusMode?: boolean;
 }>();
 
 const itemsStore = useItemsStore();
@@ -79,19 +80,11 @@ const shortRemaining = computed(() => {
     if (cache.progress[0] === 100) {
         return '√';
     }
-    const minutes = Math.ceil(remainingMinutes.value);
+    const minutes = Math.ceil(remainingMinutes.value)
     if (minutes < 0) {
         return '>_<';
     }
-    if (minutes <= 99) {
-        return minutes.toString() + 'm';
-    }
-    const hours = Math.ceil(minutes / 60);
-    if (hours <= 99) {
-        return hours.toString() + 'h';
-    }
-    const days = Math.floor(hours / 24);
-    return days.toString() + 'd';
+    return timeStore.format_short(Math.ceil(remainingMinutes.value));
 });
 
 const backgroundColor = computed(() => {
@@ -115,7 +108,12 @@ const animation = computed(() => {
 
 const workOnColor = computed(() => {
     return source.value.isWorkedOn ? 'blue' : 'gray';
-})
+});
+
+const operationStatus = reactive({
+    editing: false,
+    showingMore: false,
+});
 
 const cache = reactive({
     progress: [props.item.progress * 100],
@@ -238,17 +236,24 @@ watch(() => props.item.public.description, (newValue, oldValue) => {
     }
 });
 
-watch(() => cache.progress[0], newProgress => {
+watch(() => cache.progress[0], async newProgress => {
     if (newProgress === 100 && source.value.isWorkedOn) {
-        userStore.work_on(undefined);
+        await userStore.work_on(undefined);
+
+        if (props.focusMode) {
+            router.replace('/');
+        }
     }
 })
 
-function toggle_work_on() {
+async function toggle_work_on() {
     if (!source.value.isWorkedOn) {
         userStore.work_on(props.item.publicItem);
     } else {
-        userStore.work_on(undefined);
+        await userStore.work_on(undefined);
+        if (props.focusMode) {
+            router.replace('/');
+        }
     }
 }
 </script>
@@ -266,76 +271,14 @@ function toggle_work_on() {
             <div class="flex-grow">
                 <MiniEditor v-model="cache.description" placeholder="请输入公开内容/描述"></MiniEditor>
             </div>
-            <Dialog>
-                <DialogTrigger>
-                    <div class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1">
-                        <Icon icon="tabler:edit" />
-                    </div>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>编辑项目</DialogTitle>
-                        <MiniEditor v-model="cache.description" placeholder="请输入公开内容/描述" disabled></MiniEditor>
-                    </DialogHeader>
-                    <div class="flex flex-col gap-2">
-                        <div class="flex gap-1 items-center">
-                            <span>截止日期改为</span>
-                            <Input type="datetime-local" v-model="cache.deadline" class="w-48 h-7"></Input>
-                        </div>
-                        <div class="flex gap-1 items-center">
-                            <span>个人预估时间改为</span>
-                            <Input type="number" min="0" step="1" v-model="cache.userEstimate" class="w-20 h-7"></Input>
-                            <span>分钟</span>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-            <DropdownMenu>
-                <DropdownMenuTrigger>
-                    <div class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1">
-                        <Icon icon="weui:more-filled" class="w-6 h-6" />
-                    </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent class="flex flex-col">
-                    <DropdownMenuItem>
-                        <DropdownMenuLabel class="">
-                            <div>归属：{{ organizationName }}</div>
-                        </DropdownMenuLabel>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <DropdownMenuLabel class="flex items-center gap-1">
-                            <Icon icon="tabler:tag-filled"></Icon> {{ source.range }}
-                        </DropdownMenuLabel>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <DropdownMenuLabel class="flex items-center gap-1">
-                            <Icon icon="icon-park:deadline-sort"></Icon>
-                            {{ source.deadline }}
-                        </DropdownMenuLabel>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <DropdownMenuLabel>
-                            <div class="flex items-center gap-1">
-                                <Icon icon="hugeicons:estimate-02"></Icon>
-                                <div class="text-base">{{ timeStore.format_regular(props.item.estimateMinutes) }}</div>
-                                <div class="text-xs">{{ timeStore.format_regular(item.public.estimateMinutes) }}</div>
-                            </div>
-                        </DropdownMenuLabel>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1" @click="deleteUserItem">
-                            <Icon icon="material-symbols:delete-outline" />删除（仅个人）
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                    </DropdownMenuItem>
-                    <DropdownMenuItem v-if="permittedPublic">
-                        <DropdownMenuLabel class="text-red-500 flex items-center gap-1"
-                            @click="itemsStore.deleteItems([item.publicItem], 'public')">
-                            <Icon icon="material-symbols:delete-outline" />删除（全体）
-                        </DropdownMenuLabel>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <div @click="operationStatus.editing = !operationStatus.editing"
+                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1">
+                <Icon icon="tabler:edit" />
+            </div>
+            <div @click="operationStatus.showingMore = !operationStatus.showingMore"
+                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1">
+                <Icon icon="weui:more-filled" class="w-6 h-6" />
+            </div>
         </div>
         <div class="flex w-full items-center my-1" v-if="item.confirmed">
             <div class="text-xs inline-block text-white py-0.5 rounded-full font-mono relative w-8 text-center mr-2"
@@ -363,6 +306,74 @@ function toggle_work_on() {
             <Button class="h-8" @click="confirm">添加此作业</Button>
             <Button variant="destructive" class="h-8" @click="deleteUserItem">删除</Button>
         </div>
-        <FocusDisplay v-if="source.isWorkedOn"></FocusDisplay>
+        <Collapsible :open="operationStatus.editing">
+            <CollapsibleContent>
+                <div class="p-2 flex flex-col gap-2">
+                    <div class="text-lg font-bold text-center">编辑项目</div>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex gap-1 items-center">
+                            <span>截止日期改为</span>
+                            <Input type="datetime-local" v-model="cache.deadline" class="w-48 h-7"></Input>
+                        </div>
+                        <div class="flex gap-1 items-center">
+                            <span>个人预估时间改为</span>
+                            <Input type="number" min="0" step="1" v-model="cache.userEstimate" class="w-20 h-7"></Input>
+                            <span>分钟</span>
+                        </div>
+                    </div>
+                </div>
+            </CollapsibleContent>
+        </Collapsible>
+        <Collapsible :open="operationStatus.showingMore">
+            <CollapsibleContent>
+                <div class="p-2 flex flex-col gap-2">
+                    <div class="flex gap-2 items-center">
+                        <Badge class="flex-grow">
+                            <div class="flex items-center gap-1">
+                                <Icon icon="icons8:organization" />{{ organizationName }}
+                            </div>
+                        </Badge>
+                        <Badge class="flex-grow">
+                            <div class="flex items-center gap-1">
+                                <Icon icon="tabler:tag-filled"></Icon>{{ source.range }}
+                            </div>
+                        </Badge>
+                    </div>
+                    <div class="flex gap-2">
+                        <Badge variant="secondary" class="text-sm flex-grow">
+                            <div class="flex items-center gap-1">
+                                <Icon icon="tabler:clock" />
+                                {{ source.deadline }}
+                            </div>
+                        </Badge>
+                        <Badge variant="secondary" class="flex-grow">
+                            <div class="flex items-center gap-1">
+                                <Icon icon="hugeicons:estimate-02"></Icon>
+                                <div class="text-base">{{ timeStore.format_regular(props.item.estimateMinutes) }}</div>
+                                <div class="text-xs">{{ timeStore.format_regular(item.public.estimateMinutes) }}</div>
+                            </div>
+                        </Badge>
+                    </div>
+                    <div class="flex gap-2">
+                        <Button variant="outline" class="font-bold flex-grow">
+                            <div class="text-red-500 flex items-center gap-1" @click="deleteUserItem">
+                                <Icon icon="material-symbols:delete-outline" />删除（仅个人）
+                            </div>
+                        </Button>
+                        <Button variant="outline" class="font-bold flex-grow">
+                            <div v-if="permittedPublic" class="text-red-500 flex items-center gap-1"
+                                @click="itemsStore.deleteItems([item.publicItem], 'public')">
+                                <Icon icon="material-symbols:delete-outline" />删除（全体）
+                            </div>
+                        </Button>
+                    </div>
+                </div>
+            </CollapsibleContent>
+        </Collapsible>
+        <Collapsible :open="source.isWorkedOn">
+            <CollapsibleContent>
+                <FocusDisplay :focus-mode="focusMode"></FocusDisplay>
+            </CollapsibleContent>
+        </Collapsible>
     </div>
 </template>

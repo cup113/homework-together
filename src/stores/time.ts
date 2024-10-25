@@ -5,7 +5,7 @@ import { computed } from "vue";
 
 export const useTimeStore = defineStore("time", () => {
     const _now = useNow({
-        interval: 500,
+        interval: 1000,
     });
 
     function format_regular(minutes: number) {
@@ -30,7 +30,11 @@ export const useTimeStore = defineStore("time", () => {
             return `${m}m`;
         }
         const h = Math.ceil(m / 60);
-        return `${h}h`;
+        if (h <= 99) {
+            return `${h}h`;
+        }
+        const d = Math.ceil(h / 24);
+        return `${d}d`;
     }
 
     const now = computed(() => dayjs(_now.value));
