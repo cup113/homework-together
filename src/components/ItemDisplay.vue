@@ -6,6 +6,7 @@ import { useDebounceFn } from '@vueuse/core';
 import { useItemsStore } from '@/stores/items';
 import { useUserStore } from '@/stores/user';
 import { useShareStore } from '@/stores/share';
+import { useTimeStore } from '@/stores/time';
 import { cloneDeep } from 'es-toolkit/object';
 
 import MiniEditor from '@/components/MiniEditor.vue';
@@ -26,6 +27,7 @@ const props = defineProps<{
 const itemsStore = useItemsStore();
 const userStore = useUserStore();
 const shareStore = useShareStore();
+const timeStore = useTimeStore();
 
 const source = computed(() => {
     return {
@@ -71,7 +73,7 @@ const URGENCY_POINTS = [
     [4320, '#b1cfd9'],
 ] as const;
 
-const remainingMinutes = computed(() => dayjs(props.item.public.deadline).diff(dayjs(itemsStore.now), 'minutes'));
+const remainingMinutes = computed(() => dayjs(props.item.public.deadline).diff(dayjs(timeStore.now), 'minutes'));
 
 const shortRemaining = computed(() => {
     if (cache.progress[0] === 100) {
@@ -315,8 +317,8 @@ function toggle_work_on() {
                         <DropdownMenuLabel>
                             <div class="flex items-center gap-1">
                                 <Icon icon="hugeicons:estimate-02"></Icon>
-                                <div class="text-base">{{ itemsStore.toHumanTime(item.estimateMinutes) }}</div>
-                                <div class="text-xs">{{ itemsStore.toHumanTime(item.public.estimateMinutes) }}</div>
+                                <div class="text-base">{{ timeStore.format_regular(props.item.estimateMinutes) }}</div>
+                                <div class="text-xs">{{ timeStore.format_regular(item.public.estimateMinutes) }}</div>
                             </div>
                         </DropdownMenuLabel>
                     </DropdownMenuItem>
@@ -345,7 +347,7 @@ function toggle_work_on() {
                 </ProgressSlider>
             </div>
             <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">
-                {{ cache.progress[0].toFixed(0) }}% -{{ itemsStore.toHumanTime(etaMinutes) }}</div>
+                {{ cache.progress[0].toFixed(0) }}% -{{ timeStore.format_regular(etaMinutes) }}</div>
             <div>
                 <Button variant="ghost" class="h-4 p-0 hover:bg-slate-200" @click="toggle_work_on">
                     <Icon icon="ph:record-bold" :color="workOnColor" />

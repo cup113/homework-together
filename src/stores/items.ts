@@ -3,7 +3,6 @@ import { nextTick, computed, ref } from "vue";
 import { useUserStore } from "./user";
 import { useNetworkStore } from './network';
 import { useShareStore } from "./share";
-import { useNow } from "@vueuse/core";
 import type { Item, ItemsUpdate, RawPublicItem, RawUserItem, Subject } from '@/../types/contract';
 import dayjs from "dayjs";
 
@@ -57,12 +56,6 @@ export const useItemsStore = defineStore("items", () => {
     });
     const latestDeleteTime = ref(dayjs().subtract(1, 'hour'));
 
-    function toHumanTime(minutes: number) {
-        const h = Math.floor(minutes / 60);
-        const m = (minutes % 60).toFixed(0).padStart(2, '0');
-        return `${h}:${m}`;
-    }
-
     function convertSnapPoints(original: string) {
         // Example: 3*2+1 -> [3, 3, 1]
         const units = original.replace(/\s/g, '').split('+');
@@ -95,8 +88,6 @@ export const useItemsStore = defineStore("items", () => {
             return true;
         }).join(',');
     }
-
-    const now = useNow({ interval: 1000 });
 
     async function refreshItems() {
         const network = useNetworkStore();
@@ -234,14 +225,12 @@ export const useItemsStore = defineStore("items", () => {
     });
 
     return {
-        now,
         items,
         itemsLoading,
         itemsSorted,
         subjects,
         subjectsSummary,
         summary,
-        toHumanTime,
         convertSnapPoints,
         addItem,
         deleteItems,

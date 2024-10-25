@@ -65,7 +65,7 @@ userStore.onChecked(() => {
 </script>
 
 <template>
-    <div class="flex flex-row gap-2 items-center rounded-lg hover:bg-slate-50 px-2 mb-3">
+    <div class="flex flex-row gap-2 items-center rounded-lg hover:bg-slate-50 py-4 px-2">
         <div class="flex flex-col gap-2 flex-grow">
             <div class="flex items-center gap-4">
                 <Select v-model="organizationId">

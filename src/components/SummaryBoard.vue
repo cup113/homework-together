@@ -3,6 +3,7 @@ import { computed } from 'vue';
 
 import { useShareStore } from '@/stores/share';
 import { useItemsStore } from '@/stores/items';
+import { useTimeStore } from '@/stores/time';
 
 import LeaderBoardItem from '@/components/LeaderBoardItem.vue';
 import ProgressSlider from '@/components/ProgressSlider.vue';
@@ -10,6 +11,7 @@ import SubjectDisplay from '@/components/SubjectDisplay.vue';
 
 const shareStore = useShareStore();
 const itemsStore = useItemsStore();
+const timeStore = useTimeStore();
 
 const overallModel = computed({
   get() { return [itemsStore.summary.done] },
@@ -53,8 +55,8 @@ const overallProgress = computed(() => {
                     <ProgressSlider disabled v-model="overallModel" :max="itemsStore.summary.total"
                         :max-progress="overallProgress.max" :max-name="overallProgress.maxName"
                         :avg-progress="overallProgress.avg"></ProgressSlider>
-                    <div class="text-slate-500 ml-4">{{ itemsStore.toHumanTime(itemsStore.summary.done) }} / {{
-                        itemsStore.toHumanTime(itemsStore.summary.total) }}</div>
+                    <div class="text-slate-500 ml-4">{{ timeStore.format_regular(itemsStore.summary.done) }} / {{
+                        timeStore.format_regular(itemsStore.summary.total) }}</div>
                 </div>
             </div>
             <SubjectDisplay v-for="subject in itemsStore.subjectsSummary" :key="subject[0]" :subject="subject[1]">

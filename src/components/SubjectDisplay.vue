@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useItemsStore } from '@/stores/items';
+import { useTimeStore } from '@/stores/time';
 import { useShareStore } from '@/stores/share';
+import { useUserStore } from '@/stores/user';
 
 import ProgressSlider from '@/components/ProgressSlider.vue';
 import type { Subject } from '@/../types/contract';
-import { useUserStore } from '@/stores/user';
 
 const props = defineProps<{
     subject: Subject & { done: number, total: number };
@@ -13,6 +14,7 @@ const props = defineProps<{
 
 const userStore = useUserStore();
 const itemsStore = useItemsStore();
+const timeStore = useTimeStore();
 const shareStore = useShareStore();
 
 const sharedProgress = computed(() => {
@@ -72,7 +74,7 @@ const doneValue = computed({
         <div class="grow">
             <ProgressSlider disabled v-model="doneValue" :max="subject.total" :max-progress="sharedProgress.max"
                 :max-name="sharedProgress.maxName" :avg-progress="sharedProgress.avg" :animation="animation"></ProgressSlider>
-            <div class="ml-4 text-slate-500">{{ itemsStore.toHumanTime(subject.done) }} / {{ itemsStore.toHumanTime(subject.total) }}</div>
+            <div class="ml-4 text-slate-500">{{ timeStore.format_regular(subject.done) }} / {{ timeStore.format_regular(subject.total) }}</div>
         </div>
     </div>
 </template>

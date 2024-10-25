@@ -2,12 +2,13 @@
 import { computed } from 'vue';
 import dayjs from 'dayjs';
 import { useItemsStore } from '@/stores/items';
+import { useTimeStore } from '@/stores/time';
+import { useUserStore } from '@/stores/user';
 
 import type { UsersResponse } from '../../types/pocketbase-types';
 import ProgressSlider from './ProgressSlider.vue';
 import MiniEditor from './MiniEditor.vue';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { useUserStore } from '@/stores/user';
 
 const props = defineProps<{
     rank: number;
@@ -16,6 +17,7 @@ const props = defineProps<{
 }>();
 
 const itemsStore = useItemsStore();
+const timeStore = useTimeStore();
 const userStore = useUserStore();
 
 const rankString = computed(() => {
@@ -41,7 +43,7 @@ const minutesSinceLastActive = computed(() => {
         return 0;
     }
     const lastActive = dayjs(props.user.lastActive);
-    return dayjs(itemsStore.now).diff(dayjs(lastActive), 'minutes');
+    return dayjs(timeStore.now).diff(dayjs(lastActive), 'minutes');
 });
 
 const timeSinceLastActive = computed(() => {
