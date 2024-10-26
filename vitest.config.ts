@@ -11,6 +11,16 @@ export default mergeConfig(
       root: fileURLToPath(new URL('./', import.meta.url)),
       coverage: {
         enabled: true,
+        exclude: [
+          ...configDefaults.exclude,
+          '**/tests/**',
+          '**/src/components/ui/**',
+          '**/pb_migrations/**',
+          '**/pb_data/**',
+          '**/dist-server/**',
+          '**/*.config.*',
+          '**/types/*.ts',
+        ]
       },
       reporters: ['default', 'junit'],
       outputFile: './coverage/junit/junit.xml',

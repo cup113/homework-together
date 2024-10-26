@@ -52,7 +52,7 @@ Do homework together with your friends!
 
 ### v0.3
 
-- [ ] Fix inconsistent progress by loosing access
+- [ ] Change leaderboard to organization-based
 - [ ] Complete snap points feature
 
 ### v0.4
@@ -89,6 +89,7 @@ Do homework together with your friends!
 ### v0.9
 
 - [ ] Parent (belonging) attribute for item
+- [ ] Add HTTPS & Multiple Domain Support
 - [ ] Add Comment & Request system
 
 ### v1.0
