@@ -53,24 +53,25 @@ Do homework together with your friends!
 ### v0.3
 
 - [ ] Fix inconsistent progress by loosing access
-- [ ] Responsive design
 - [ ] Complete snap points feature
 
 ### v0.4
 
+- [ ] Responsive design
 - [ ] Transition animation
 - [ ] Delete Item Confirmation
 
 ### v0.5
 
 - [ ] Handle Errors
-- [ ] Add note system
+- [ ] Updated Item: Organization, range, publicEstimate
 - [ ] Add user management (email registration, reset password, etc.)
 
 ### v0.6
 
+- [ ] Add note system
+- [ ] Rich Text Editor
 - [ ] Add Organization management
-- [ ] Updated Item: Organization, range, publicEstimate
 
 ### v0.7
 

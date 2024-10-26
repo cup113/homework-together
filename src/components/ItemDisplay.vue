@@ -69,29 +69,29 @@ const sharedProgress = computed(() => {
 // const URGENCY_POINTS = [-1440, -480, 0, 15, 60, 180, 480, 1440, 4320, 10080]
 const URGENCY_POINTS = [
     [0, '#edcbc0'],
-    [120, '#f7e6ca'],
-    [1440, '#cfe3ec'],
-    [4320, '#b1cfd9'],
+    [120 * 60, '#f7e6ca'],
+    [1440 * 60, '#cfe3ec'],
+    [4320 * 60, '#b1cfd9'],
 ] as const;
 
-const remainingMinutes = computed(() => dayjs(props.item.public.deadline).diff(dayjs(timeStore.now), 'minutes'));
+const remainingSeconds = computed(() => dayjs(props.item.public.deadline).diff(dayjs(timeStore.now), 'seconds'));
 
 const shortRemaining = computed(() => {
     if (cache.progress[0] === 100) {
         return '√';
     }
-    const minutes = Math.ceil(remainingMinutes.value)
-    if (minutes < 0) {
+    const seconds = Math.ceil(remainingSeconds.value)
+    if (seconds < 0) {
         return '>_<';
     }
-    return timeStore.format_short(Math.ceil(remainingMinutes.value));
+    return timeStore.format_short(Math.ceil(remainingSeconds.value));
 });
 
 const backgroundColor = computed(() => {
     if (cache.progress[0] === 100) {
         return '#99c1a9';
     }
-    return URGENCY_POINTS.find(d => d[0] >= remainingMinutes.value)?.[1] ?? '#b6d5c5';
+    return URGENCY_POINTS.find(d => d[0] >= remainingSeconds.value)?.[1] ?? '#b6d5c5';
 });
 
 const animation = computed(() => {
@@ -272,11 +272,11 @@ async function toggle_work_on() {
                 <MiniEditor v-model="cache.description" placeholder="请输入公开内容/描述"></MiniEditor>
             </div>
             <div @click="operationStatus.editing = !operationStatus.editing"
-                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1">
+                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1" :class="{ 'bg-blue-300': operationStatus.editing }">
                 <Icon icon="tabler:edit" />
             </div>
             <div @click="operationStatus.showingMore = !operationStatus.showingMore"
-                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1">
+                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1" :class="{ 'bg-blue-300': operationStatus.showingMore }">
                 <Icon icon="weui:more-filled" class="w-6 h-6" />
             </div>
         </div>
