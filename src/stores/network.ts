@@ -95,6 +95,12 @@ export const useNetworkStore = defineStore("network", () => {
                     return;
                 }
                 Object.assign(progress.users[index], userDiff);
+                if (id === useUserStore().userBasic.id) {
+                    const userStore = useUserStore();
+                    if (userStore.user) {
+                        Object.assign(userStore.user, userDiff);
+                    }
+                }
             });
         })
     }

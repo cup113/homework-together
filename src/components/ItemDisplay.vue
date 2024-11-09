@@ -250,7 +250,7 @@ watch(() => cache.progress[0], async newProgress => {
 
 async function toggle_work_on() {
     if (!source.value.isWorkedOn) {
-        userStore.work_on(props.item.publicItem);
+        await userStore.work_on(props.item.publicItem);
     } else {
         await userStore.work_on(undefined);
         if (props.focusMode) {

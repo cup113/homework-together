@@ -53,11 +53,11 @@ Do homework together with your friends!
 ### v0.3
 
 - [x] Change leaderboard to organization-based
-- [ ] Complete snap points feature
 
 ### v0.4
 
 - [ ] Responsive design (Combobox, template)
+- [ ] Complete snap points feature
 - [ ] Transition animation
 - [ ] Delete Item Confirmation
 
