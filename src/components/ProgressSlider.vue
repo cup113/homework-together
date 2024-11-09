@@ -60,7 +60,7 @@ const currentPercentage = computed(() => {
   if (props.modelValue === undefined) {
     return "--%";
   } else {
-    return (props.modelValue[0]).toFixed(1) + '%';
+    return (props.modelValue[0] / (props.max ?? 100) * 100).toFixed(1) + '%';
   }
 })
 
@@ -107,7 +107,7 @@ watch(() => props.modelValue, newValue => {
         <div v-for="r, i in rankedProgress" :key="r.progress">
           <div class="flex gap-2">
             <div class="font-bold text-slate-500">#{{ i + 1 }}</div>
-            <div class="min-w-16 text-amber-800 font-bold">{{ r.progress.toFixed(1) }}%</div>
+            <div class="min-w-16 text-amber-800 font-bold">{{ (r.progress * 100 / (props.max ?? 100)).toFixed(1) }}%</div>
             <div>{{ r.names.join(', ') }}</div>
           </div>
         </div>
