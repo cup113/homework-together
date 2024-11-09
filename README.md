@@ -52,7 +52,7 @@ Do homework together with your friends!
 
 ### v0.3
 
-- [ ] Change leaderboard to organization-based
+- [x] Change leaderboard to organization-based
 - [ ] Complete snap points feature
 
 ### v0.4
