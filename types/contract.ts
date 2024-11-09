@@ -222,10 +222,13 @@ const organizationsContract = c.router({
         summary: "Enter an organization",
     },
     progress: {
-        method: 'GET',
+        method: 'POST',
         path: '/api/v1/organizations/progress',
+        body: z.object({
+            organizations: z.array(ID),
+        }),
         responses: {
-            200: c.type<SharedProgress>(),
+            200: c.type<Record<string, SharedProgress>>(),
             401: ErrorType,
             404: ErrorType,
         },

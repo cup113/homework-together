@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useUserStore } from '@/stores/user';
-import { useShareStore } from '@/stores/share';
 import { useTimeStore } from '@/stores/time';
 import dayjs from 'dayjs';
 
@@ -11,12 +10,11 @@ defineProps<{
     focusMode?: boolean;
 }>();
 
-const shareStore = useShareStore();
 const userStore = useUserStore();
 const timeStore = useTimeStore();
 
 const workingOnSince = computed(() => {
-    const user = shareStore.rankedUsers.find(user => user.id === userStore.user.id);
+    const user = userStore.user;
     if (!user || !user.workingOn) {
         return undefined;
     }

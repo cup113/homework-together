@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
 const userStore = useUserStore();
-const username = ref(userStore.user.username);
+const username = ref(userStore.userBasic.username);
 const password = ref('');
 const passwordConfirm = ref('');
 
@@ -134,7 +134,7 @@ watch(throttledOrganizationName, async value => {
                             class="flex items-center gap-2">
                             <div>{{ organization.name }}</div>
                             <div>
-                                <Button @click="join_organization(organization.id)" v-if="!userStore.user.organizations.some(o => o.id === organization.id)">Join</Button>
+                                <Button @click="join_organization(organization.id)" v-if="!userStore.user?.organizations.some(o => o.id === organization.id)">Join</Button>
                                 <Badge v-else>Joined</Badge>
                             </div>
                         </div>

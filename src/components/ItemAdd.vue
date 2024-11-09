@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import dayjs from 'dayjs';
 
 import { useItemsStore } from '@/stores/items';
@@ -15,6 +15,7 @@ const PERSONAL_ORGANIZATION_ID = '@PERSONAL';
 const itemsStore = useItemsStore();
 const userStore = useUserStore();
 
+
 const organizationId = ref(PERSONAL_ORGANIZATION_ID);
 const subject = ref(undefined as string | undefined);
 const description = ref('<p></p>');
@@ -22,6 +23,8 @@ const range = ref(PublicItemsRangeOptions.all);
 const estimateMinutes = ref(0);
 const deadline = ref(dayjs().format("YYYY-MM-DD" + "T" + "23:59"));
 const snapPoints = ref('');
+
+const organizations = computed(() => userStore.user?.organizations ?? []);
 
 function addItem() {
     if (!subject.value) {
@@ -60,7 +63,7 @@ function convertSnapPoints() {
 }
 
 userStore.onChecked(() => {
-    organizationId.value = userStore.user.organizations[0]?.id ?? PERSONAL_ORGANIZATION_ID;
+    organizationId.value = userStore.user?.organizations[0]?.id ?? PERSONAL_ORGANIZATION_ID;
 })
 </script>
 
@@ -78,7 +81,7 @@ userStore.onChecked(() => {
                         </SelectGroup>
                         <SelectSeparator></SelectSeparator>
                         <SelectGroup>
-                            <SelectItem v-for="organization in userStore.user.organizations" :value="organization.id"
+                            <SelectItem v-for="organization in organizations" :value="organization.id"
                                 :key="organization.id">
                                 {{ organization.name }}
                             </SelectItem>

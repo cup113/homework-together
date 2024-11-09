@@ -78,7 +78,7 @@ const animation = computed(() => {
     }
     return {
         duration: 3000,
-        stressed: props.user.id === userStore.user.id,
+        stressed: props.user.id === userStore.userBasic.id,
     };
 });
 

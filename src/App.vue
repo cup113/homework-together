@@ -9,23 +9,10 @@ import NavBar from '@/components/NavBar.vue';
       <NavBar></NavBar>
     </header>
     <hr>
-    <!-- Transitional effect -->
-    <RouterView v-slot="{ Component, route }">
-      <transition name="fade">
-        <component :is="Component" :key="route.path" />
-      </transition>
+    <RouterView>
     </RouterView>
   </div>
 </template>
 
 <style>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
-}
 </style>

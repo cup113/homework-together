@@ -50,6 +50,7 @@ export class UpdateItemRoute extends RouteBase<true, 401 | 403 | 404> {
                         itemId: publicItem.id,
                         subjectId: publicItem.subject,
                         userId: authResult.record.id,
+                        organizationId: publicItem.organization,
                         newProgress: [
                             estimateMinutes * updatedItem.progress,
                             estimateMinutes

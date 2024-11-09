@@ -2,6 +2,7 @@ import Client from 'pocketbase';
 import type { TypedPocketBase, UserItemsResponse, OrganizationsResponse, UsersResponse, UserItemsRecord, PublicItemsResponse, PublicItemsRecord, OrganizationsRecord, UsersRecord } from '../types/pocketbase-types.js';
 import type { Item, RawPublicItem, RawUserItem, RawOrganization } from '../types/contract.js';
 import dayjs from 'dayjs';
+import logger from './logger.mjs';
 
 export class DBService {
     protected pb: TypedPocketBase;
@@ -121,16 +122,21 @@ export class DBService {
         } as Required<Pick<UsersRecord, 'lastActive'>>);
     }
 
-    public async getUserItems(userId: string, _config: {
+    public async getUserItems(userId: string, config: {
         thisUserOnly: boolean,
+        organizations?: string[],
     }): Promise<Item[]> {
-        const config = Object.assign({}, _config ?? {});
 
-        const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsResponse }>>(Object.assign({
+        const SHARED_FILTER_BASE = "user.lastActive >= created && confirmed = true";
+
+        const filter = config.thisUserOnly ? `user.id = "${userId}"` : (
+            (config.organizations && config.organizations.length) ? `(${SHARED_FILTER_BASE}) && (${config.organizations.map(org => `publicItem.organization.id = "${org}"`).join(" || ")})` : SHARED_FILTER_BASE
+        );
+
+        const items = await this.pb.collection('userItems').getFullList<UserItemsResponse<{ publicItem: PublicItemsResponse }>>({
             expand: "publicItem",
-        }, config.thisUserOnly ? { filter: `user.id = "${userId}"` } : {
-            filter: `user.id = "${userId}" || (user.lastActive >= created && confirmed = true)`
-        }));
+            filter,
+        });
         return Promise.all(items.map(async item => {
             const { expand, ...rest } = item;
             if (!expand) {

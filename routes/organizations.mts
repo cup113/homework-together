@@ -1,6 +1,6 @@
 import RouteBase from '../services/route.mjs';
-import type { RawOrganization, SharedProgress } from '../types/contract.js';
-import type { OrganizationsResponse } from '../types/pocketbase-types.js';
+import type { Item, RawOrganization, SharedProgress } from '../types/contract.js';
+import type { OrganizationsResponse, UsersResponse } from '../types/pocketbase-types.js';
 
 export class QueryOrganizationRoute extends RouteBase<OrganizationsResponse[], never> {
     private name: string;
@@ -62,9 +62,12 @@ export class CreateOrganizationRoute extends RouteBase<OrganizationsResponse, 40
     }
 }
 
-export class GetProgressRoute extends RouteBase<SharedProgress, 401 | 404> {
-    constructor(authorization: string | undefined) {
+export class GetProgressRoute extends RouteBase<Record<string, SharedProgress>, 401 | 404> {
+    private organizations: string[];
+
+    constructor(authorization: string | undefined, organizations: string[]) {
         super(authorization);
+        this.organizations = organizations;
     }
 
     private get_map_or_create<T>(map: Map<string, T>, key: string, createValue: () => T): T {
@@ -90,43 +93,54 @@ export class GetProgressRoute extends RouteBase<SharedProgress, 401 | 404> {
         return result;
     }
 
+    private handle_one_organization(organizationId: string, users: UsersResponse[], items: Item[]): SharedProgress {
+        const mapItems = new Map<string, Map<string, [number, number]>>();
+        const mapSubjects = new Map<string, Map<string, [number, number]>>();
+        const mapOverall = new Map<string, [number, number]>();
+
+        items.filter(item => item.public.organization === organizationId).forEach((item) => {
+            const itemArray = this.get_map_or_create(
+                this.get_map_or_create(mapItems, item.publicItem, () => new Map()),
+                item.user, () => [0, 0],
+            );
+            const subjectArray = this.get_map_or_create(
+                this.get_map_or_create(mapSubjects, item.public.subject, () => new Map()),
+                item.user, () => [0, 0],
+            );
+            const overallArray = this.get_map_or_create(mapOverall, item.user, () => [0, 0]);
+
+            [itemArray, subjectArray, overallArray].forEach(array => {
+                array[0] += item.progress * item.estimateMinutes;
+                array[1] += item.estimateMinutes;
+            });
+        });
+
+        const progress = {
+            items: this.map_to_record_deep(mapItems),
+            subjects: this.map_to_record_deep(mapSubjects),
+            overall: this.map_to_record(mapOverall),
+            users: users.filter(user => user.organizations.includes(organizationId)),
+        };
+
+        return progress;
+    }
+
     public async handle() {
         const authResult = await this.auth();
         if (authResult instanceof Error) {
             return authResult;
         }
         try {
+            const result: Record<string, SharedProgress> = {};
             const items = await this.db.getUserItems(authResult.record.id, {
                 thisUserOnly: false,
+                organizations: this.organizations,
             });
-            const mapItems = new Map<string, Map<string, [number, number]>>();
-            const mapSubjects = new Map<string, Map<string, [number, number]>>();
-            const mapOverall = new Map<string, [number, number]>();
-
-            items.forEach((item) => {
-                const itemArray = this.get_map_or_create(
-                    this.get_map_or_create(mapItems, item.publicItem, () => new Map()),
-                    item.user, () => [0, 0],
-                );
-                const subjectArray = this.get_map_or_create(
-                    this.get_map_or_create(mapSubjects, item.public.subject, () => new Map()),
-                    item.user, () => [0, 0],
-                );
-                const overallArray = this.get_map_or_create(mapOverall, item.user, () => [0, 0]);
-
-                [itemArray, subjectArray, overallArray].forEach(array => {
-                    array[0] += item.progress * item.estimateMinutes;
-                    array[1] += item.estimateMinutes;
-                });
+            const users = await this.db.listUsers();
+            this.organizations.forEach(async (organizationId) => {
+                result[organizationId] = this.handle_one_organization(organizationId, users, items);
             });
-
-            const progress = {
-                items: this.map_to_record_deep(mapItems),
-                subjects: this.map_to_record_deep(mapSubjects),
-                overall: this.map_to_record(mapOverall),
-                users: await this.db.listUsers(),
-            };
-            return this.success(progress);
+            return this.success(result);
         } catch (error) {
             return this.convertError(error, [401, 404]);
         }

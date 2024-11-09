@@ -40,30 +40,22 @@ const source = computed(() => {
             some: '部分',
             private: '个人',
         }[props.item.public.range]),
-        isWorkedOn: shareStore.sharedProgress.users.some(u => u.id === userStore.user.id && u.workingOn === props.item.publicItem),
+        isWorkedOn: userStore.user?.workingOn === props.item.publicItem,
         snapPoints: props.item.public.snaps ? props.item.public.snaps.split(',').map(s => parseInt(s)) : undefined,
     };
 });
-const sharedProgress = computed(() => {
-    const userProgress = Object.entries(shareStore.sharedProgress.items[props.item.publicItem] ?? {})
-        .map(([uid, p]) => ({ uid, progress: p[0] / p[1] }));
-    if (userProgress.length === 0) {
+const progressData = computed(() => {
+    if (!props.item.public.organization) {
         return {
-            max: undefined,
-            maxNames: [],
-            avg: undefined,
+            [userStore.userBasic.username]: props.item.progress * 100,
         };
     }
-    const max = Math.max.apply(null, userProgress.map(p => p.progress));
-    const maxNames = userProgress.filter(p => p.progress === max)
-        .map(p => shareStore.sharedProgress.users.find(u => u.id === p.uid)?.name)
-        .filter(name => name !== undefined);
-    const avg = userProgress.reduce((acc, cur) => acc + cur.progress, 0) / userProgress.length;
-    return {
-        max,
-        maxName: maxNames.join(', '),
-        avg,
-    };
+    const orgProgress = shareStore.sharedProgress[props.item.public.organization];
+    if (orgProgress === undefined) {
+        return undefined;
+    }
+    return Object.fromEntries(Object.entries(orgProgress.items[props.item.publicItem] ?? {})
+        .map(([uid, p]) => ([orgProgress.users.find(u => u.id === uid)?.name ?? uid, p[0] / p[1] * 100])));
 });
 
 // const URGENCY_POINTS = [-1440, -480, 0, 15, 60, 180, 480, 1440, 4320, 10080]
@@ -96,7 +88,17 @@ const backgroundColor = computed(() => {
 
 const animation = computed(() => {
     const stressed = source.value.isWorkedOn;
-    const animationPoints = shareStore.sharedProgress.users.map(user => user.workingOn).filter(id => id === props.item.publicItem).length + (stressed ? 2 : 0);
+    let animationPoints = 0;
+    if (props.item.public.organization) {
+        const orgProgress = shareStore.sharedProgress[props.item.public.organization];
+        if (orgProgress === undefined) {
+            return undefined;
+        }
+        animationPoints += orgProgress.users.map(user => user.workingOn).filter(id => id === props.item.publicItem).length;
+    }
+    if (stressed) {
+        animationPoints += 2;
+    }
     if (animationPoints === 0) {
         return undefined;
     }
@@ -127,7 +129,7 @@ const organizationName = computed(() => {
     if (!props.item.public.organization) {
         return '个人';
     }
-    const organization = userStore.user.organizations.find(o => o.id === props.item.public.organization);
+    const organization = userStore.user?.organizations?.find(o => o.id === props.item.public.organization);
     if (!organization) {
         return '未知';
     }
@@ -137,14 +139,14 @@ const organizationName = computed(() => {
 const etaMinutes = computed(() => (100 - cache.progress[0]) * props.item.estimateMinutes / 100);
 
 const permittedPublic = computed(() => {
-    if (userStore.user.id === props.item.public.author) {
+    if (userStore.userBasic.id === props.item.public.author) {
         return true;
     }
-    const organization = userStore.user.organizations.find(o => o.id === props.item.public.organization);
+    const organization = userStore.user?.organizations.find(o => o.id === props.item.public.organization);
     if (!organization) {
         return false;
     }
-    return organization.leader === userStore.user.id || organization.managers.includes(userStore.user.id);
+    return organization.leader === userStore.userBasic.id || organization.managers.includes(userStore.userBasic.id);
 });
 
 function updateProgress(value: number) {
@@ -272,11 +274,13 @@ async function toggle_work_on() {
                 <MiniEditor v-model="cache.description" placeholder="请输入公开内容/描述"></MiniEditor>
             </div>
             <div @click="operationStatus.editing = !operationStatus.editing"
-                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1" :class="{ 'bg-blue-300': operationStatus.editing }">
+                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1"
+                :class="{ 'bg-blue-300': operationStatus.editing }">
                 <Icon icon="tabler:edit" />
             </div>
             <div @click="operationStatus.showingMore = !operationStatus.showingMore"
-                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1" :class="{ 'bg-blue-300': operationStatus.showingMore }">
+                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1"
+                :class="{ 'bg-blue-300': operationStatus.showingMore }">
                 <Icon icon="weui:more-filled" class="w-6 h-6" />
             </div>
         </div>
@@ -284,9 +288,8 @@ async function toggle_work_on() {
             <div class="text-xs inline-block text-white py-0.5 rounded-full font-mono relative w-8 text-center mr-2"
                 :style="{ backgroundColor }">{{ shortRemaining }}</div>
             <div class="flex-grow">
-                <ProgressSlider v-model="cache.progress" :min="0" :max="100" :step="1"
-                    :max-progress="sharedProgress.max" :avg-progress="sharedProgress.avg"
-                    :max-name="sharedProgress.maxName" :animation="animation" :snap-points="source.snapPoints">
+                <ProgressSlider v-model="cache.progress" :min="0" :max="100" :step="1" :progress-data="progressData"
+                    :animation="animation" :snap-points="source.snapPoints">
                 </ProgressSlider>
             </div>
             <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">

@@ -6,6 +6,7 @@ export interface ProgressChange {
     itemId: string;
     subjectId: string;
     userId: string;
+    organizationId: string;
     newProgress: [number, number];
 }
 

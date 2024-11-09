@@ -4,17 +4,18 @@ import { useLocalStorage } from '@vueuse/core'
 import { useNetworkStore } from './network';
 import { Sha256 } from '@aws-crypto/sha256-js';
 import type { OrganizationsResponse } from '@/../types/pocketbase-types';
+import type { UserInfo } from 'types/contract';
 
 const initialUser = () => ({
   id: '',
   username: '',
-  organizations: new Array<OrganizationsResponse>(),
 })
 
 export const useUserStore = defineStore('user', () => {
   const token = useLocalStorage('HT_token', '');
   const isLoggedIn = computed(() => token.value !== '');
-  const user = useLocalStorage('HT_user', initialUser());
+  const userBasic = useLocalStorage('HT_user', initialUser());
+  const user = ref<UserInfo | undefined>();
   const organizations = ref(new Array<OrganizationsResponse>());
   const checked = ref(false);
 
@@ -48,8 +49,9 @@ export const useUserStore = defineStore('user', () => {
       return;
     }
     token.value = response.body.token;
-    user.value.username = response.body.username;
-    user.value.organizations = response.body.organizations;
+    user.value = response.body;
+    userBasic.value.username = response.body.username;
+    userBasic.value.id = response.body.id;
     checked.value = true;
   }
 
@@ -63,7 +65,7 @@ export const useUserStore = defineStore('user', () => {
 
   function logout() {
     token.value = '';
-    user.value = initialUser();
+    userBasic.value = initialUser();
   }
 
   async function login(username: string, password: string) {
@@ -76,8 +78,8 @@ export const useUserStore = defineStore('user', () => {
     });
     if (response.status === 200) {
       token.value = response.body.token;
-      user.value.id = response.body.id;
-      user.value.username = response.body.username;
+      userBasic.value.id = response.body.id;
+      userBasic.value.username = response.body.username;
       location.assign('/manage');
     } else {
       alert('Login failed.');
@@ -118,6 +120,10 @@ export const useUserStore = defineStore('user', () => {
       body: { organizationId }
     });
     if (response.status === 200) {
+      if (user.value === undefined) {
+        alert('User not found');
+        throw new Error('User not found');
+      }
       user.value.organizations.push(response.body);
       return true;
     } else {
@@ -133,6 +139,10 @@ export const useUserStore = defineStore('user', () => {
       body: { name }
     });
     if (response.status === 200) {
+      if (user.value === undefined) {
+        alert('User not found');
+        throw new Error('User not found');
+      }
       user.value.organizations.push(response.body);
       return true;
     } else {
@@ -163,6 +173,7 @@ export const useUserStore = defineStore('user', () => {
     isLoggedIn,
     token,
     user,
+    userBasic,
     organizations,
     check,
     onChecked,

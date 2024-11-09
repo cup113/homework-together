@@ -3,17 +3,15 @@ import { computed } from 'vue';
 
 import { useItemsStore } from '@/stores/items';
 import { useUserStore } from '@/stores/user';
-import { useShareStore } from '@/stores/share';
 
 import LeaderBoard from '@/components/SummaryBoard.vue'
 import ItemDisplay from '@/components/ItemDisplay.vue';
 
 const itemsStore = useItemsStore();
-const shareStore = useShareStore();
 const userStore = useUserStore();
 
 const item = computed(() => {
-  const publicId = shareStore.sharedProgress.users.find(u => u.id === userStore.user.id)?.workingOn;
+  const publicId = userStore.user?.workingOn;
   if (!publicId) {
     return undefined;
   }

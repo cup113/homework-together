@@ -16,7 +16,7 @@ const itemsStore = useItemsStore();
 
 const permittedToRemoveAll = computed(() => {
   const userStore = useUserStore();
-  return userStore.user.organizations[0]?.leader === userStore.user.id || userStore.user.organizations[0]?.managers?.includes(userStore.user.id);
+  return userStore.user?.organizations[0]?.leader === userStore.user?.id || userStore.user?.organizations?.[0]?.managers?.includes(userStore.user.id);
 });
 </script>
 

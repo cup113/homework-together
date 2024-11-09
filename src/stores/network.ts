@@ -56,7 +56,7 @@ export const useNetworkStore = defineStore("network", () => {
 
         socket.on('refresh', (except, sources) => {
             const userStore = useUserStore();
-            if (userStore.user.id === except) {
+            if (userStore.userBasic.id === except) {
                 return;
             }
             sources.forEach(source => {
@@ -89,12 +89,13 @@ export const useNetworkStore = defineStore("network", () => {
         socket.on('userUpdated', user => {
             const shareStore = useShareStore();
             const { id, ...userDiff } = user;
-            const index = shareStore.sharedProgress.users.findIndex(user => user.id === id);
-            if (index === -1) {
-                shareStore.refreshProgress();
-            } else {
-                Object.assign(shareStore.sharedProgress.users[index], userDiff);
-            }
+            Object.entries(shareStore.sharedProgress).forEach(([, progress]) => {
+                const index = progress.users.findIndex(user => user.id === id);
+                if (index === -1) {
+                    return;
+                }
+                Object.assign(progress.users[index], userDiff);
+            });
         })
     }
 

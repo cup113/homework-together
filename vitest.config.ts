@@ -20,6 +20,8 @@ export default mergeConfig(
           '**/dist-server/**',
           '**/*.config.*',
           '**/types/*.ts',
+          '**/*.d.ts',
+          '**/main.mts',
         ]
       },
       reporters: ['default', 'junit'],

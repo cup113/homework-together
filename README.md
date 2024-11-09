@@ -57,7 +57,7 @@ Do homework together with your friends!
 
 ### v0.4
 
-- [ ] Responsive design
+- [ ] Responsive design (Combobox, template)
 - [ ] Transition animation
 - [ ] Delete Item Confirmation
 

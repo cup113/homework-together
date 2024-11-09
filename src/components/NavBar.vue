@@ -23,7 +23,7 @@ const userStore = useUserStore();
             <NavigationMenuItem>
                 <RouterLink to="/login">
                     <NavigationMenuLink :class="navigationMenuTriggerStyle()">
-                        <span v-if="userStore.isLoggedIn">User ({{ userStore.user.username }})</span>
+                        <span v-if="userStore.isLoggedIn">User ({{ userStore.userBasic.username }})</span>
                         <span v-else class="font-bold text-blue-500">Get started</span>
                     </NavigationMenuLink>
                 </RouterLink>
