@@ -48,11 +48,27 @@ const maxProgress = computed(() => {
   return rankedProgress.value[0].progress;
 });
 
+const avgProgress = computed(() => {
+  if (props.progressData === undefined || rankedProgress.value.length === 0) {
+    return undefined;
+  }
+  const sum = rankedProgress.value.reduce((acc, { progress }) => acc + progress, 0);
+  return sum / rankedProgress.value.length;
+})
+
 const maxStyle = computed(() => {
   if (maxProgress.value === undefined) {
     return { display: 'none' };
   } else {
     return { left: `calc(${maxProgress.value * 100 / (props.max ?? 100)}% - 2%)`, width: '4%' };
+  }
+})
+
+const avgStyle = computed(() => {
+  if (avgProgress.value === undefined) {
+    return { display: 'none' };
+  } else {
+    return { left: `calc(${avgProgress.value * 100 / (props.max ?? 100)}% - 2%)`, width: '4%' };
   }
 })
 
@@ -122,8 +138,9 @@ watch(() => props.modelValue, newValue => {
         <SliderRange class="absolute h-full bg-lime-800"
           :class="{ 'progress-transition': disabled, 'animation': props.animation !== undefined }" />
         <span v-for="snapPoint in snapPoints" :key="snapPoint" class="absolute block h-full bg-slate-500 opacity-20"
-          :style="{ width: '1px', left: `calc(${snapPoint}% - 1px)` }"></span>
-        <span v-for="r in rankedProgress" :key="r.progress" class="absolute block h-full bg-slate-100 opacity-50 progress-transition" :style="{ left: `calc(${r.progress * 100}% - 1%)`, width: '2%' }"></span>
+          :style="{ width: '2px', left: `calc(${snapPoint}% - 1px)` }"></span>
+        <span v-for="r in rankedProgress" :key="r.progress" class="absolute block h-full bg-purple-300 opacity-50 progress-transition" :style="{ left: `calc(${r.progress * 100}% - 2%)`, width: '4%' }"></span>
+        <span class="absolute block h-full bg-orange-500 opacity-70 progress-transition" :style="avgStyle"></span>
         <span class="absolute block h-full bg-cyan-500 opacity-70 progress-transition" :style="maxStyle"></span>
       </SliderTrack>
       <SliderThumb v-for="(_, key) in thumbs" :key="key"

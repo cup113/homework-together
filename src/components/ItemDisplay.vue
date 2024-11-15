@@ -34,6 +34,7 @@ const source = computed(() => {
     return {
         index: (props.index + 1).toString().padStart(2, '0'),
         subject: itemsStore.subjects.find(s => s.id === props.item.public.subject),
+        subjectColor: itemsStore.subjectColors.get(props.item.public.subject),
         deadline: props.item.public.deadline ? dayjs(props.item.public.deadline).format("MM/DD HH:mm") : undefined,
         range: ({
             all: '全体',
@@ -267,7 +268,7 @@ async function toggle_work_on() {
             <div>
                 <div class="text-sm font-bold inline-block">{{ source.index }}</div>
             </div>
-            <Badge class="flex flex-row items-center h-6 font-mono">
+            <Badge class="flex flex-row items-center h-6 font-mono" :style="{ backgroundColor: source.subjectColor }">
                 <div>{{ source.subject?.abbr }}</div>
             </Badge>
             <div class="flex-grow">

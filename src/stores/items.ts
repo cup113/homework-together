@@ -55,6 +55,19 @@ export const useItemsStore = defineStore("items", () => {
             return a.public.description.localeCompare(b.public.description);
         });
     });
+    const subjectColors = computed(() => {
+        const VIBRANT_COLORS = ['#c2410c', '#a16207', '#4d7c0f', '#0f766e', '#0369a1', '#5b21b8'];
+        let index = 0;
+        const colors = new Map<string, string>();
+        itemsSorted.value.forEach(item => {
+            const color = colors.get(item.subject.id);
+            if (!color) {
+                colors.set(item.subject.id, VIBRANT_COLORS[index]);
+                index = (index + 1) % VIBRANT_COLORS.length;
+            }
+        });
+        return colors;
+    })
     const latestDeleteTime = ref(dayjs().subtract(1, 'hour'));
 
     async function refreshItems() {
@@ -197,6 +210,7 @@ export const useItemsStore = defineStore("items", () => {
         itemsLoading,
         itemsSorted,
         subjects,
+        subjectColors,
         subjectsSummary,
         summary,
         convertSnapPoints,

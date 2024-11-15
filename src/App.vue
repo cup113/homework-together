@@ -5,7 +5,7 @@ import NavBar from '@/components/NavBar.vue';
 
 <template>
   <div>
-    <header>
+    <header class="sticky top-0 bg-secondary z-10">
       <NavBar></NavBar>
     </header>
     <hr>
