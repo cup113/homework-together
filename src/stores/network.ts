@@ -106,6 +106,7 @@ export const useNetworkStore = defineStore("network", () => {
     }
 
     return {
+        buildVersion,
         client,
     }
 });

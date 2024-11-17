@@ -59,41 +59,57 @@ Do homework together with your friends!
 - [x] Complete snap points feature
 - [x] Delete Item Confirmation
 - [x] User Information management
-- [ ] Organization items management
 
 ### v0.5
 
-- [ ] Responsive design (Combobox, template)
+- [ ] Organization items management
 - [ ] Transition animation
-- [ ] Handle Errors
-- [ ] Updated Item: Organization, range, publicEstimate
-- [ ] Add user management (email registration, reset password, etc.)
+- [ ] Update Item: Organization, range, publicEstimate
 
 ### v0.6
 
-- [ ] Add note system
-- [ ] Rich Text Editor
-- [ ] Add Organization management
+- [ ] Responsive design (Combobox, template)
+- [ ] Handle Errors & Check Input
 
 ### v0.7
 
-- [ ] Add newcomer guiding
-- [ ] Add pagination & filter in homework list
-- [ ] Undo & Redo System
+- [ ] User management (email registration, reset password, etc.)
+- [ ] Rich Text Editor
 
 ### v0.8
 
-- [ ] Add Goal system
-- [ ] Add customization
-- [ ] Add Subject belonging to organization
-- [ ] Leaderboard for organization
+- [ ] Add newcomer guiding
+- [ ] Add pagination & filter in homework list
 
 ### v0.9
 
+- [ ] Undo & Redo System
+- [ ] Add Goal system
+- [ ] Customization
+
+### v0.10
+
+- [ ] Subject belonging to organization
+- [ ] Subject priority
+- [ ] Organization management
+
+### v0.11
+
+- [ ] Note system
+- [ ] Add Comment system
+
+### v0.12
+
 - [ ] Parent (belonging) attribute for item
+
+### v0.13
+
 - [ ] Add HTTPS & Multiple Domain Support
-- [ ] Add Comment & Request system
+
+### v0.14
+
+- [ ] Finish Unit test
 
 ### v1.0
 
-- [ ] Add Unit test
+- [ ] Strengthen Security
