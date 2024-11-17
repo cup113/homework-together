@@ -139,7 +139,7 @@ watch(() => props.modelValue, newValue => {
           :class="{ 'progress-transition': disabled, 'animation': props.animation !== undefined }" />
         <span v-for="snapPoint in snapPoints" :key="snapPoint" class="absolute block h-full bg-slate-500 opacity-20"
           :style="{ width: '2px', left: `calc(${snapPoint}% - 1px)` }"></span>
-        <span v-for="r in rankedProgress" :key="r.progress" class="absolute block h-full bg-purple-300 opacity-50 progress-transition" :style="{ left: `calc(${r.progress * 100}% - 2%)`, width: '4%' }"></span>
+        <span v-for="r in rankedProgress" :key="r.progress" class="absolute block h-full bg-purple-300 opacity-50 progress-transition" :style="{ left: `calc(${r.progress * 100 / (props.max ?? 100)}% - 2%)`, width: '4%' }"></span>
         <span class="absolute block h-full bg-orange-500 opacity-70 progress-transition" :style="avgStyle"></span>
         <span class="absolute block h-full bg-cyan-500 opacity-70 progress-transition" :style="maxStyle"></span>
       </SliderTrack>

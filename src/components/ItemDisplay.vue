@@ -2,12 +2,10 @@
 import { computed, reactive, watch } from 'vue';
 import dayjs from 'dayjs';
 import type { Item, ItemsUpdate } from '../../types/contract';
-import { useDebounceFn } from '@vueuse/core';
 import { useItemsStore } from '@/stores/items';
 import { useUserStore } from '@/stores/user';
 import { useShareStore } from '@/stores/share';
 import { useTimeStore } from '@/stores/time';
-import { cloneDeep } from 'es-toolkit/object';
 
 import MiniEditor from '@/components/MiniEditor.vue';
 import ProgressSlider from '@/components/ProgressSlider.vue';
@@ -18,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import router from '@/router';
+import { createCache } from '@/lib/cache';
 
 const props = defineProps<{
     index: number;
@@ -70,7 +69,7 @@ const URGENCY_POINTS = [
 const remainingSeconds = computed(() => dayjs(props.item.public.deadline).diff(dayjs(timeStore.now), 'seconds'));
 
 const shortRemaining = computed(() => {
-    if (cache.progress[0] === 100) {
+    if (cache.value.progress[0] === 100) {
         return '√';
     }
     const seconds = Math.ceil(remainingSeconds.value)
@@ -81,7 +80,7 @@ const shortRemaining = computed(() => {
 });
 
 const backgroundColor = computed(() => {
-    if (cache.progress[0] === 100) {
+    if (cache.value.progress[0] === 100) {
         return '#99c1a9';
     }
     return URGENCY_POINTS.find(d => d[0] >= remainingSeconds.value)?.[1] ?? '#b6d5c5';
@@ -118,74 +117,16 @@ const operationStatus = reactive({
     showingMore: false,
 });
 
-const cache = reactive({
-    progress: [props.item.progress * 100],
-    deadline: props.item.public.deadline ? dayjs(props.item.public.deadline).format("YYYY-MM-DD" + "T" + "HH:mm") : undefined,
-    description: props.item.public.description,
-    userEstimate: props.item.estimateMinutes,
-    confirmed: props.item.confirmed,
-});
-
-const organizationName = computed(() => {
-    if (!props.item.public.organization) {
-        return '个人';
+const cache = createCache(() => {
+    const deadline = props.item.public.deadline;
+    return {
+        progress: [props.item.progress * 100] as [number],
+        deadline: deadline ? dayjs(deadline).format("YYYY-MM-DD" + "T" + "HH:mm") : undefined,
+        description: props.item.public.description,
+        userEstimate: props.item.estimateMinutes,
+        confirmed: props.item.confirmed,
     }
-    const organization = userStore.user?.organizations?.find(o => o.id === props.item.public.organization);
-    if (!organization) {
-        return '未知';
-    }
-    return organization.name;
-});
-
-const etaMinutes = computed(() => (100 - cache.progress[0]) * props.item.estimateMinutes / 100);
-
-const permittedPublic = computed(() => {
-    if (userStore.userBasic.id === props.item.public.author) {
-        return true;
-    }
-    const organization = userStore.user?.organizations.find(o => o.id === props.item.public.organization);
-    if (!organization) {
-        return false;
-    }
-    return organization.leader === userStore.userBasic.id || organization.managers.includes(userStore.userBasic.id);
-});
-
-function updateProgress(value: number) {
-    cache.progress[0] = value;
-}
-
-function confirm() {
-    itemsStore.updateItem({
-        userItem: {
-            id: props.item.id,
-            confirmed: true,
-        }
-    });
-}
-
-function deleteUserItem() {
-    itemsStore.deleteItems([props.item.id], 'user');
-}
-
-type EqualType = number | string | boolean | undefined | Array<EqualType>;
-
-function equal<T extends EqualType>(a: T, b: T): boolean {
-    if (a === undefined || b === undefined) {
-        return a === undefined && b === undefined;
-    }
-    if (Array.isArray(a) && Array.isArray(b)) {
-        if (a.length !== b.length) {
-            return false;
-        }
-        return a.every((v, i) => equal(v, b[i]));
-    }
-    return a === b;
-}
-
-let oldCache = cloneDeep(cache);
-
-watch(() => cache, useDebounceFn((newCache) => {
-    const keys = Object.keys(newCache) as (keyof typeof cache)[];
+}, diff => {
     const updates: ItemsUpdate = {
         publicItem: undefined,
         userItem: undefined,
@@ -202,44 +143,59 @@ watch(() => cache, useDebounceFn((newCache) => {
         }
         return updates.userItem;
     }
-    function getUpdater(key: keyof typeof cache) {
-        switch (key) {
-            case 'progress':
-                return () => { userItem().progress = newCache.progress[0] / 100; }
-            case 'confirmed':
-                return () => { userItem().confirmed = newCache.confirmed; }
-            case 'userEstimate':
-                return () => { userItem().estimateMinutes = newCache.userEstimate; }
-            case 'deadline':
-                return () => { publicItem().deadline = dayjs(newCache.deadline).toISOString(); }
-            case 'description':
-                return () => { publicItem().description = newCache.description; }
-        }
+    const UPDATERS: { [K in keyof typeof cache.value]: (value: (typeof cache.value[K])) => void }= {
+        progress: (value: [number]) => { userItem().progress = value[0] / 100; },
+        confirmed: (value: boolean) => { userItem().confirmed = value; },
+        userEstimate: (value: number) => { publicItem().estimateMinutes = value; },
+        deadline: (value: string | undefined) => { publicItem().deadline = dayjs(value).toISOString(); },
+        description: (value: string) => { publicItem().description = value; },
+    } as const;
+
+    Object.entries(diff).forEach(([key, value]) => {
+        // @ts-expect-error Typescript limitation about inferring entry types
+        UPDATERS[key](value);
+    })
+    itemsStore.updateItem(Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined)));
+}, 500);
+
+const organizationName = computed(() => {
+    if (!props.item.public.organization) {
+        return '个人';
     }
-    keys.forEach(key => {
-        const oldVal = oldCache[key];
-        const val = newCache[key];
-        if (!equal(oldVal, val)) {
-            getUpdater(key)();
+    const organization = userStore.user?.organizations?.find(o => o.id === props.item.public.organization);
+    if (!organization) {
+        return '未知';
+    }
+    return organization.name;
+});
+
+const etaMinutes = computed(() => (100 - cache.value.progress[0]) * props.item.estimateMinutes / 100);
+
+const permittedPublic = computed(() => {
+    if (userStore.userBasic.id === props.item.public.author) {
+        return true;
+    }
+    const organization = userStore.user?.organizations.find(o => o.id === props.item.public.organization);
+    if (!organization) {
+        return false;
+    }
+    return organization.leader === userStore.userBasic.id || organization.managers.includes(userStore.userBasic.id);
+});
+
+function confirm() {
+    itemsStore.updateItem({
+        userItem: {
+            id: props.item.id,
+            confirmed: true,
         }
     });
-    oldCache = cloneDeep(newCache);
-    itemsStore.updateItem(Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined)));
-}, 300), { deep: true });
+}
 
-watch(() => props.item.progress, (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-        updateProgress(newValue * 100);
-    }
-});
+function deleteUserItem() {
+    itemsStore.deleteItems([props.item.id], 'user');
+}
 
-watch(() => props.item.public.description, (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-        cache.description = newValue;
-    }
-});
-
-watch(() => cache.progress[0], async newProgress => {
+watch(() => cache.value.progress[0], async newProgress => {
     if (newProgress === 100 && source.value.isWorkedOn) {
         await userStore.work_on(undefined);
 
@@ -247,7 +203,7 @@ watch(() => cache.progress[0], async newProgress => {
             router.replace('/');
         }
     }
-})
+});
 
 async function toggle_work_on() {
     if (!source.value.isWorkedOn) {

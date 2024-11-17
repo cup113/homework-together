@@ -2,7 +2,6 @@ import Client from 'pocketbase';
 import type { TypedPocketBase, UserItemsResponse, OrganizationsResponse, UsersResponse, UserItemsRecord, PublicItemsResponse, PublicItemsRecord, OrganizationsRecord, UsersRecord } from '../types/pocketbase-types.js';
 import type { Item, RawPublicItem, RawUserItem, RawOrganization } from '../types/contract.js';
 import dayjs from 'dayjs';
-import logger from './logger.mjs';
 
 export class DBService {
     protected pb: TypedPocketBase;

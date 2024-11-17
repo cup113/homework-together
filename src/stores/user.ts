@@ -4,7 +4,7 @@ import { useLocalStorage } from '@vueuse/core'
 import { useNetworkStore } from './network';
 import { Sha256 } from '@aws-crypto/sha256-js';
 import type { OrganizationsResponse } from '@/../types/pocketbase-types';
-import type { UserInfo } from 'types/contract';
+import type { UserInfo, UserUpdate } from 'types/contract';
 
 const initialUser = () => ({
   id: '',
@@ -56,6 +56,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function onChecked(func: CallableFunction) {
+    if (checked.value) {
+      func();
+    }
     watch(checked, newValue => {
       if (newValue) {
         func();
@@ -165,6 +168,33 @@ export const useUserStore = defineStore('user', () => {
     return true;
   }
 
+  async function update_user(userUpdate: UserUpdate) {
+    const network = useNetworkStore();
+    const response = await network.client.auth.update.mutation({
+      body: userUpdate,
+    });
+    if (response.status !== 200) {
+      console.error(response.body);
+      alert('Failed to update user.');
+      return false;
+    }
+    if (userUpdate.name !== undefined) {
+      if (!user.value) {
+        alert('User not found');
+        return;
+      }
+      user.value.name = userUpdate.name;
+    }
+    if (userUpdate.goal !== undefined) {
+      if (!user.value) {
+        alert('User not found');
+        return;
+      }
+      user.value.goal = userUpdate.goal;
+    }
+    return true;
+  }
+
   nextTick(() => {
     check();
   });
@@ -180,6 +210,7 @@ export const useUserStore = defineStore('user', () => {
     logout,
     login,
     register,
+    update_user,
     query_organizations,
     join_organization,
     create_organization,

@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import RouteService from '../services/route.mjs';
-import type { UserAuth, UserInfo } from '../types/contract.js'
+import type { UserAuth, UserInfo, UserUpdate } from '../types/contract.js'
 
 export class LoginRoute extends RouteService<UserAuth, 401> {
     private username: string;
@@ -90,6 +90,55 @@ export class UpdateUserWorkingRoute extends RouteService<true, 401> {
 
         } catch (e) {
             this.logger.info(`Error while updating user info: ${e}`);
+            return this.error("Unauthorized", 401);
+        }
+    }
+}
+
+export class UpdateUserRoute extends RouteService<true, 401> {
+    private userUpdate: UserUpdate;
+
+    constructor(authorization: string | undefined, userUpdate: UserUpdate) {
+        super(authorization);
+        this.userUpdate = userUpdate;
+    }
+
+    protected async handle() {
+        try {
+            const authResult = await this.auth();
+            if (authResult instanceof Error) {
+                return authResult;
+            }
+            const userId = authResult.record.id;
+
+            await this.db.updateUser(userId, this.userUpdate);
+            this.io().to(authResult.record.organizations).emit('userUpdated', Object.assign({ id: userId }, this.userUpdate));
+            return this.success(true);
+        } catch (e) {
+            this.logger.info(`Error while updating user info: ${e}`);
+            return this.error("Unauthorized", 401);
+        }
+    }
+}
+
+export class DeleteUserRoute extends RouteService<true, 401> {
+    constructor(authorization: string | undefined) {
+        super(authorization);
+    }
+
+    protected async handle() {
+        try {
+            const authResult = await this.auth();
+            if (authResult instanceof Error) {
+                return authResult;
+            }
+            const userId = authResult.record.id;
+
+            await this.db.removeUser(userId);
+            this.io().to(authResult.record.organizations).emit('refresh', userId, ['items', 'share']);
+            return this.success(true);
+        } catch (e) {
+            this.logger.info(`Error while deleting user: ${e}`);
             return this.error("Unauthorized", 401);
         }
     }

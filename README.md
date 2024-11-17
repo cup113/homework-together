@@ -56,13 +56,15 @@ Do homework together with your friends!
 
 ### v0.4
 
-- [ ] Responsive design (Combobox, template)
 - [ ] Complete snap points feature
-- [ ] Transition animation
 - [ ] Delete Item Confirmation
+- [x] User Information management
+- [ ] Organization items management
 
 ### v0.5
 
+- [ ] Responsive design (Combobox, template)
+- [ ] Transition animation
 - [ ] Handle Errors
 - [ ] Updated Item: Organization, range, publicEstimate
 - [ ] Add user management (email registration, reset password, etc.)

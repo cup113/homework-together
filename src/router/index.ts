@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
-import LoginView from '@/views/LoginView.vue';
+import UserView from '@/views/UserView.vue';
 import FocusView from '@/views/FocusView.vue';
 
 const router = createRouter({
@@ -12,9 +12,9 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/login',
-      name: 'login',
-      component: LoginView
+      path: '/user',
+      name: 'user',
+      component: UserView
     },
     {
       path: '/focus',

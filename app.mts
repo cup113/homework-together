@@ -10,7 +10,7 @@ import { Server } from "socket.io";
 
 import contract from './types/contract.js';
 import loggerService from './services/logger.mjs'
-import { LoginRoute, RegisterRoute, CheckUserRoute, UpdateUserWorkingRoute } from './routes/auth.mjs';
+import { LoginRoute, RegisterRoute, CheckUserRoute, UpdateUserWorkingRoute, UpdateUserRoute, DeleteUserRoute } from './routes/auth.mjs';
 import { CreateItemRoute, GetItemRoute, UpdateItemRoute, DeleteItemsRoute } from './routes/items.mjs'
 import { ListSubjectsRoute } from './routes/subjects.mjs';
 import { CreateOrganizationRoute, QueryOrganizationRoute, EnterOrganizationRoute, GetProgressRoute } from './routes/organizations.mjs';
@@ -42,7 +42,13 @@ export function startServer(mode?: 'production' | 'development') {
             },
             working({ headers: { authorization }, body: { workingOnItemId } }) {
                 return new UpdateUserWorkingRoute(authorization, workingOnItemId).getResponse();
-            }
+            },
+            update({ headers: { authorization }, body }) {
+                return new UpdateUserRoute(authorization, body).getResponse();
+            },
+            delete({ headers: { authorization } }) {
+                return new DeleteUserRoute(authorization).getResponse();
+            },
         },
         items: {
             list({ headers: { authorization } }) {

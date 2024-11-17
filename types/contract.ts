@@ -65,9 +65,14 @@ const itemsCreateSchema = z.object({
         note: z.optional(LONG_STRING),
     }),
 });
+const userUpdateSchema = z.object({
+    name: z.optional(GENERAL_STRING),
+    goal: z.optional(DATE_STR),
+})
 
 export type ItemsUpdate = z.infer<typeof itemsUpdateSchema>;
 export type ItemsCreate = z.infer<typeof itemsCreateSchema>;
+export type UserUpdate = z.infer<typeof userUpdateSchema>;
 
 const c = initContract();
 
@@ -120,7 +125,27 @@ const authContract = c.router({
         body: z.object({
             workingOnItemId: z.optional(ID),
         }),
-    }
+    },
+    update: {
+        method: 'PUT',
+        path: '/api/v1/auth/update',
+        responses: {
+            200: c.type<true>(),
+            401: ErrorType,
+        },
+        body: userUpdateSchema,
+        summary: "Update the user's information",
+    },
+    delete: {
+        method: 'PUT',
+        path: '/api/v1/auth/delete',
+        responses: {
+            200: c.type<true>(),
+            401: ErrorType,
+        },
+        body: z.object({}),
+        summary: "Delete the user's account",
+    },
 });
 
 const itemsContract = c.router({

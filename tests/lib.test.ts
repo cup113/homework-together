@@ -1,6 +1,7 @@
 import { suite, test, expect } from 'vitest';
 import { cn } from '../src/lib/utils';
 import { convertSnapPoints } from '../src/lib/snap-points';
+import { createCache } from '../src/lib/cache';
 
 suite('utils', () => {
     test('cn', () => {
@@ -31,5 +32,9 @@ suite('utils', () => {
     test.fails('snap point with too many steps', () => {
         convertSnapPoints('2*2000', { maxSteps: 1000 });
         // TODO invalid expression error
+    });
+
+    test('cache', () => {
+        // TODO
     });
 });
