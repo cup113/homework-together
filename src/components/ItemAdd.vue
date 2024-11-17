@@ -55,7 +55,9 @@ function addItem() {
 
 function convertSnapPoints() {
     try {
-        snapPoints.value = itemsStore.convertSnapPoints(snapPoints.value);
+        const { snapPoints: _snapPoints, total } = itemsStore.convertSnapPoints(snapPoints.value);
+        snapPoints.value = _snapPoints;
+        estimateMinutes.value = total;
     } catch (e) {
         console.error(e);
         alert('错误' + e);

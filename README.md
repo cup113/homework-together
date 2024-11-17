@@ -56,7 +56,7 @@ Do homework together with your friends!
 
 ### v0.4
 
-- [ ] Complete snap points feature
+- [x] Complete snap points feature
 - [x] Delete Item Confirmation
 - [x] User Information management
 - [ ] Organization items management
