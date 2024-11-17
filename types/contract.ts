@@ -1,4 +1,4 @@
-import type { UsersRecord, UsersResponse, AuthSystemFields, UserItemsResponse, PublicItemsRecord, SubjectsRecord, UserItemsRecord, OrganizationsRecord, OrganizationsResponse } from './pocketbase-types.js';
+import type { UsersRecord, UsersResponse, AuthSystemFields, UserItemsResponse, PublicItemsRecord, SubjectsRecord, UserItemsRecord, OrganizationsRecord, OrganizationsResponse, PublicItemsResponse } from './pocketbase-types.js';
 import { PublicItemsRangeOptions } from './pocketbase-types.js';
 import z from 'zod';
 import { initContract } from '@ts-rest/core';
@@ -258,6 +258,16 @@ const organizationsContract = c.router({
             404: ErrorType,
         },
         summary: "Get the progress of the user's organizations",
+    },
+    listItems: {
+        method: 'GET',
+        path: '/api/v1/organizations/items',
+        query: z.object({
+            organizationId: ID,
+        }),
+        responses: {
+            200: c.type<PublicItemsResponse[]>(),
+        },
     }
 });
 

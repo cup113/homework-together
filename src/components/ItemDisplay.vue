@@ -218,7 +218,7 @@ function confirm() {
 }
 
 function deleteUserItem() {
-    itemsStore.deleteItems([props.item.id], 'user');
+    itemsStore.deleteItems([props.item.id], 'user', false);
 }
 
 async function toggle_work_on() {
@@ -338,7 +338,7 @@ async function toggle_work_on() {
                         </Button>
                         <Button variant="outline" class="font-bold flex-grow">
                             <div v-if="permittedPublic" class="text-red-500 flex items-center gap-1"
-                                @click="itemsStore.deleteItems([item.publicItem], 'public')">
+                                @click="itemsStore.deleteItems([item.publicItem], 'public', false)">
                                 <Icon icon="material-symbols:delete-outline" />删除（全体）
                             </div>
                         </Button>

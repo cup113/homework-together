@@ -1,6 +1,6 @@
 import RouteBase from '../services/route.mjs';
 import type { Item, RawOrganization, SharedProgress } from '../types/contract.js';
-import type { OrganizationsResponse, UsersResponse } from '../types/pocketbase-types.js';
+import type { OrganizationsResponse, PublicItemsResponse, UsersResponse } from '../types/pocketbase-types.js';
 
 export class QueryOrganizationRoute extends RouteBase<OrganizationsResponse[], never> {
     private name: string;
@@ -140,6 +140,28 @@ export class GetProgressRoute extends RouteBase<Record<string, SharedProgress>, 
             this.organizations.forEach(async (organizationId) => {
                 result[organizationId] = this.handle_one_organization(organizationId, users, items);
             });
+            return this.success(result);
+        } catch (error) {
+            return this.convertError(error, [401, 404]);
+        }
+    }
+}
+
+export class ListOrganizationItemsRoute extends RouteBase<PublicItemsResponse[], 401 | 404> {
+    private organizationId: string;
+
+    constructor(authorization: string | undefined, organizationId: string) {
+        super(authorization);
+        this.organizationId = organizationId;
+    }
+
+    public async handle() {
+        const authResult = await this.auth();
+        if (authResult instanceof Error) {
+            return authResult;
+        }
+        try {
+            const result = await this.db.listOrganizationItems(this.organizationId);
             return this.success(result);
         } catch (error) {
             return this.convertError(error, [401, 404]);

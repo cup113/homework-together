@@ -93,6 +93,12 @@ export class DBService {
         } as OrganizationsRecord);
     }
 
+    public async listOrganizationItems(organizationId: string): Promise<PublicItemsResponse[]> {
+        return await this.pb.collection('publicItems').getFullList({
+            filter: `organization = "${organizationId}"`,
+        });
+    }
+
     public async checkUser() {
         const authResult = await this.pb.collection('users').authRefresh();
         if (!this.pb.authStore.isValid) {

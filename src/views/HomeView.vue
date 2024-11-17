@@ -7,6 +7,7 @@ import { useUserStore } from '@/stores/user';
 import LeaderBoard from '@/components/SummaryBoard.vue'
 import ItemDisplay from '@/components/ItemDisplay.vue';
 import ItemAdd from '@/components/ItemAdd.vue';
+import DeleteConfirmation from '@/components/DeleteConfirmation.vue';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,5 +49,6 @@ const permittedToRemoveAll = computed(() => {
         </div>
       </section>
     </div>
+    <DeleteConfirmation></DeleteConfirmation>
   </main>
 </template>

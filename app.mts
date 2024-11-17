@@ -13,7 +13,7 @@ import loggerService from './services/logger.mjs'
 import { LoginRoute, RegisterRoute, CheckUserRoute, UpdateUserWorkingRoute, UpdateUserRoute, DeleteUserRoute } from './routes/auth.mjs';
 import { CreateItemRoute, GetItemRoute, UpdateItemRoute, DeleteItemsRoute } from './routes/items.mjs'
 import { ListSubjectsRoute } from './routes/subjects.mjs';
-import { CreateOrganizationRoute, QueryOrganizationRoute, EnterOrganizationRoute, GetProgressRoute } from './routes/organizations.mjs';
+import { CreateOrganizationRoute, QueryOrganizationRoute, EnterOrganizationRoute, GetProgressRoute, ListOrganizationItemsRoute } from './routes/organizations.mjs';
 
 import type { SocketServer } from './types/ws.js';
 import { initIO } from './services/ws.mjs';
@@ -82,6 +82,9 @@ export function startServer(mode?: 'production' | 'development') {
             progress({ headers: { authorization }, body: { organizations } }) {
                 return new GetProgressRoute(authorization, organizations).getResponse();
             },
+            listItems({ headers: { authorization }, query: { organizationId } }) {
+                return new ListOrganizationItemsRoute(authorization, organizationId).getResponse();
+            }
         }
     });
 

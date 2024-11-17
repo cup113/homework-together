@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { nextTick, computed, ref } from "vue";
+import { nextTick, computed, ref, reactive } from "vue";
 import { useUserStore } from "./user";
 import { useNetworkStore } from './network';
 import { useShareStore } from "./share";
@@ -31,6 +31,11 @@ export const useItemsStore = defineStore("items", () => {
             }
         })
         return map;
+    });
+    const askingDelete = ref(false);
+    const askingDeleteParams = reactive({
+        items: new Array<Item>(),
+        type: 'public' as 'public' | 'user',
     });
     const summary = computed(() => {
         let total = 0;
@@ -68,7 +73,6 @@ export const useItemsStore = defineStore("items", () => {
         });
         return colors;
     })
-    const latestDeleteTime = ref(dayjs().subtract(1, 'hour'));
 
     async function refreshItems() {
         const network = useNetworkStore();
@@ -155,12 +159,12 @@ export const useItemsStore = defineStore("items", () => {
         }
     }
 
-    async function deleteItems(ids: string[], type: 'public' | 'user') {
-        if (dayjs().diff(latestDeleteTime.value, 'minutes') > 1) {
-            const text = `你确定要删除此项目(ID: ${ids.join(', ')})吗？` + (type === 'public' ? '所有人的进度都会被删除。' : '');
-            if (!confirm(text)) {
-                return;
-            }
+    async function deleteItems(ids: string[], type: 'public' | 'user', skipAsk: boolean) {
+        if (!skipAsk) {
+            askingDelete.value = true;
+            askingDeleteParams.items = items.value.filter(item => ids.includes((type === 'public' ? item.publicItem : item.id)));
+            askingDeleteParams.type = type;
+            return;
         }
         const network = useNetworkStore();
         const response = await network.client.items.delete.mutation({
@@ -174,7 +178,6 @@ export const useItemsStore = defineStore("items", () => {
                 const index = items.value.findIndex(item => (type === 'public' ? item.publicItem : item.id) === itemId);
                 if (index >= 0) {
                     items.value.splice(index, 1);
-                    latestDeleteTime.value = dayjs();
                     const shareStore = useShareStore();
                     shareStore.refreshProgress();
                 } else {
@@ -193,7 +196,7 @@ export const useItemsStore = defineStore("items", () => {
             if (!deadline) { return false; }
             return dayjs().isAfter(dayjs(deadline));
         });
-        await deleteItems(outdatedItems.map(item => (type === 'public' ? item.publicItem : item.id)), type);
+        await deleteItems(outdatedItems.map(item => (type === 'public' ? item.publicItem : item.id)), type, false);
     }
 
     nextTick(() => {
@@ -209,6 +212,8 @@ export const useItemsStore = defineStore("items", () => {
         items,
         itemsLoading,
         itemsSorted,
+        askingDelete,
+        askingDeleteParams,
         subjects,
         subjectColors,
         subjectsSummary,
