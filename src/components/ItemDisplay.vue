@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive } from 'vue';
 import dayjs from 'dayjs';
-import type { Item, ItemsUpdate } from '../../types/contract';
+import type { Item } from '../../types/contract';
 import { useItemsStore } from '@/stores/items';
 import { useUserStore } from '@/stores/user';
 import { useShareStore } from '@/stores/share';
 import { useTimeStore } from '@/stores/time';
+import { useOptimisticUpdate } from '@/lib/optimistic';
 
 import MiniEditor from '@/components/MiniEditor.vue';
 import ProgressSlider from '@/components/ProgressSlider.vue';
@@ -16,7 +17,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import router from '@/router';
-import { createCache } from '@/lib/cache';
 
 const props = defineProps<{
     index: number;
@@ -69,7 +69,7 @@ const URGENCY_POINTS = [
 const remainingSeconds = computed(() => dayjs(props.item.public.deadline).diff(dayjs(timeStore.now), 'seconds'));
 
 const shortRemaining = computed(() => {
-    if (cache.value.progress[0] === 100) {
+    if (localProgress.value === 100) {
         return '√';
     }
     const seconds = Math.ceil(remainingSeconds.value)
@@ -80,7 +80,7 @@ const shortRemaining = computed(() => {
 });
 
 const backgroundColor = computed(() => {
-    if (cache.value.progress[0] === 100) {
+    if (localProgress.value === 100) {
         return '#99c1a9';
     }
     return URGENCY_POINTS.find(d => d[0] >= remainingSeconds.value)?.[1] ?? '#b6d5c5';
@@ -117,46 +117,72 @@ const operationStatus = reactive({
     showingMore: false,
 });
 
-const cache = createCache(() => {
-    const deadline = props.item.public.deadline;
-    return {
-        progress: [props.item.progress * 100] as [number],
-        deadline: deadline ? dayjs(deadline).format("YYYY-MM-DD" + "T" + "HH:mm") : undefined,
-        description: props.item.public.description,
-        userEstimate: props.item.estimateMinutes,
-        confirmed: props.item.confirmed,
-    }
-}, diff => {
-    const updates: ItemsUpdate = {
-        publicItem: undefined,
-        userItem: undefined,
-    };
-    const publicItem = () => {
-        if (updates.publicItem === undefined) {
-            updates.publicItem = { id: props.item.publicItem };
+const { data: localProgressRaw } = useOptimisticUpdate({
+    source: () => props.item.progress,
+    fromSource: (source) => [source * 100] as [number],
+    trackedValue: (data) => () => data.value[0],
+    update: (value) => {
+        if (value === 100 && source.value.isWorkedOn) {
+            toggle_work_on();
         }
-        return updates.publicItem;
-    }
-    const userItem = () => {
-        if (updates.userItem === undefined) {
-            updates.userItem = { id: props.item.id };
-        }
-        return updates.userItem;
-    }
-    const UPDATERS: { [K in keyof typeof cache.value]: (value: (typeof cache.value[K])) => void }= {
-        progress: (value: [number]) => { userItem().progress = value[0] / 100; },
-        confirmed: (value: boolean) => { userItem().confirmed = value; },
-        userEstimate: (value: number) => { publicItem().estimateMinutes = value; },
-        deadline: (value: string | undefined) => { publicItem().deadline = dayjs(value).toISOString(); },
-        description: (value: string) => { publicItem().description = value; },
-    } as const;
+        return itemsStore.updateItem({
+            userItem: {
+                id: props.item.id,
+                progress: value / 100,
+            }
+        });
+    },
+    debounceMs: 300,
+});
 
-    Object.entries(diff).forEach(([key, value]) => {
-        // @ts-expect-error Typescript limitation about inferring entry types
-        UPDATERS[key](value);
-    })
-    itemsStore.updateItem(Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined)));
-}, 500);
+const { data: description } = useOptimisticUpdate({
+    source: () => props.item.public.description,
+    fromSource: (source) => source,
+    trackedValue: (data) => data,
+    update: (value) => {
+        return itemsStore.updateItem({
+            publicItem: {
+                id: props.item.publicItem,
+                description: value,
+            }
+        });
+    },
+    debounceMs: 300,
+});
+
+const { data: deadline } = useOptimisticUpdate({
+    source: () => props.item.public.deadline,
+    fromSource: (source) => {
+        return source ? dayjs(source).format("YYYY-MM-DD" + "T" + "HH:mm") : undefined;
+    },
+    trackedValue: (data) => data,
+    update: (value) => {
+        return itemsStore.updateItem({
+            publicItem: {
+                id: props.item.publicItem,
+                deadline: value ? dayjs(value).toISOString() : undefined,
+            }
+        });
+    },
+    debounceMs: 200,
+});
+
+const { data: userEstimate } = useOptimisticUpdate({
+    source: () => props.item.estimateMinutes,
+    fromSource: (source) => source,
+    trackedValue: (data) => data,
+    update: (value) => {
+        return itemsStore.updateItem({
+            userItem: {
+                id: props.item.id,
+                estimateMinutes: value,
+            }
+        });
+    },
+    debounceMs: 200,
+});
+
+const localProgress = computed(() => localProgressRaw.value[0]);
 
 const organizationName = computed(() => {
     if (!props.item.public.organization) {
@@ -169,7 +195,7 @@ const organizationName = computed(() => {
     return organization.name;
 });
 
-const etaMinutes = computed(() => (100 - cache.value.progress[0]) * props.item.estimateMinutes / 100);
+const etaMinutes = computed(() => (100 - localProgress.value) * props.item.estimateMinutes / 100);
 
 const permittedPublic = computed(() => {
     if (userStore.userBasic.id === props.item.public.author) {
@@ -195,16 +221,6 @@ function deleteUserItem() {
     itemsStore.deleteItems([props.item.id], 'user');
 }
 
-watch(() => cache.value.progress[0], async newProgress => {
-    if (newProgress === 100 && source.value.isWorkedOn) {
-        await userStore.work_on(undefined);
-
-        if (props.focusMode) {
-            router.replace('/');
-        }
-    }
-});
-
 async function toggle_work_on() {
     if (!source.value.isWorkedOn) {
         await userStore.work_on(props.item.publicItem);
@@ -219,7 +235,7 @@ async function toggle_work_on() {
 
 <template>
     <div class="rounded-lg hover:bg-slate-50 px-3 pt-1 border-t border-slate-300 flex flex-col transition-colors duration-300 ease-in-out"
-        :class="{ 'bg-lime-50': cache.progress[0] === 100 }">
+        :class="{ 'bg-lime-50': localProgress === 100 }">
         <div class="flex w-full gap-2 items-center">
             <div>
                 <div class="text-sm font-bold inline-block">{{ source.index }}</div>
@@ -228,7 +244,7 @@ async function toggle_work_on() {
                 <div>{{ source.subject?.abbr }}</div>
             </Badge>
             <div class="flex-grow">
-                <MiniEditor v-model="cache.description" placeholder="请输入公开内容/描述"></MiniEditor>
+                <MiniEditor v-model="description" placeholder="请输入公开内容/描述"></MiniEditor>
             </div>
             <div @click="operationStatus.editing = !operationStatus.editing"
                 class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1"
@@ -245,12 +261,12 @@ async function toggle_work_on() {
             <div class="text-xs inline-block text-white py-0.5 rounded-full font-mono relative w-8 text-center mr-2"
                 :style="{ backgroundColor }">{{ shortRemaining }}</div>
             <div class="flex-grow">
-                <ProgressSlider v-model="cache.progress" :min="0" :max="100" :step="1" :progress-data="progressData"
+                <ProgressSlider v-model="localProgressRaw" :min="0" :max="100" :step="1" :progress-data="progressData"
                     :animation="animation" :snap-points="source.snapPoints">
                 </ProgressSlider>
             </div>
             <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">
-                {{ cache.progress[0].toFixed(0) }}% -{{ timeStore.format_regular(etaMinutes) }}</div>
+                {{ localProgress.toFixed(0) }}% -{{ timeStore.format_regular(etaMinutes) }}</div>
             <div>
                 <Button variant="ghost" class="h-4 p-0 hover:bg-slate-200" @click="toggle_work_on">
                     <Icon icon="ph:record-bold" :color="workOnColor" />
@@ -260,7 +276,7 @@ async function toggle_work_on() {
         <div v-else class="flex justify-center pb-1 gap-2">
             <div class="flex gap-1 items-center">
                 <span>预估</span>
-                <Input type="number" min="0" step="1" v-model="cache.userEstimate" class="w-20 h-7"></Input>
+                <Input type="number" min="0" step="1" v-model="userEstimate" class="w-20 h-7"></Input>
                 <span>分钟</span>
             </div>
             <Button class="h-8" @click="confirm">添加此作业</Button>
@@ -273,11 +289,11 @@ async function toggle_work_on() {
                     <div class="flex flex-col gap-2">
                         <div class="flex gap-1 items-center">
                             <span>截止日期改为</span>
-                            <Input type="datetime-local" v-model="cache.deadline" class="w-48 h-7"></Input>
+                            <Input type="datetime-local" v-model="deadline" class="w-48 h-7"></Input>
                         </div>
                         <div class="flex gap-1 items-center">
                             <span>个人预估时间改为</span>
-                            <Input type="number" min="0" step="1" v-model="cache.userEstimate" class="w-20 h-7"></Input>
+                            <Input type="number" min="0" step="1" v-model="userEstimate" class="w-20 h-7"></Input>
                             <span>分钟</span>
                         </div>
                     </div>

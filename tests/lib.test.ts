@@ -1,7 +1,6 @@
 import { suite, test, expect } from 'vitest';
 import { cn } from '../src/lib/utils';
 import { convertSnapPoints } from '../src/lib/snap-points';
-import { createCache } from '../src/lib/cache';
 
 suite('utils', () => {
     test('cn', () => {

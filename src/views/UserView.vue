@@ -11,8 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { createCache } from '@/lib/cache';
-import type { UserUpdate } from 'types/contract';
+import { useOptimisticUpdate } from '@/lib/optimistic'
 
 const userStore = useUserStore();
 const username = ref(userStore.userBasic.username);
@@ -23,23 +22,31 @@ const source = computed(() => ({
     goal: userStore.user?.goal,
 }));
 
-const cache = createCache(() => {
-    return {
-        name: source.value.name,
-        goal: source.value.goal ? dayjs(source.value.goal).format('YYYY-MM-DD HH:mm') : undefined,
-    };
-}, diff => {
-    const userUpdate: UserUpdate = {};
-    const UPDATERS = {
-        goal: value => userUpdate.goal = dayjs(value).toISOString(),
-        name: value => userUpdate.name = value,
-    } satisfies { [K in keyof typeof cache.value]: (value: typeof cache.value[K]) => void };
-    Object.entries(diff).forEach(([key, value]) => {
-        // @ts-expect-error Typescript limitation about inferring entry types
-        UPDATERS[key](value);
-    });
-    userStore.update_user(userUpdate);
-}, 1000);
+const { data: name } = useOptimisticUpdate({
+    source: () => source.value.name,
+    fromSource: name => name ?? '',
+    trackedValue: data => data,
+    update: async (name) => {
+        const value = await userStore.update_user({ name });
+        if (!value) {
+            throw new Error('Failed to update user');
+        }
+    },
+    debounceMs: 300,
+});
+
+const { data: goal } = useOptimisticUpdate({
+    source: () => source.value.goal,
+    fromSource: goal => goal ? dayjs(goal).format('YYYY-MM-DD' + 'T' + 'HH:mm') : undefined,
+    trackedValue: data => data,
+    update: async (goal) => {
+        const value = await userStore.update_user({ goal });
+        if (!value) {
+            throw new Error('Failed to update user');
+        }
+    },
+    debounceMs: 300,
+});
 
 async function login() {
     await userStore.login(username.value, password.value);
@@ -189,11 +196,11 @@ watch(throttledOrganizationName, async value => {
                     </div>
                     <div class="flex items-center gap-2">
                         <div class="w-24">昵称：</div>
-                        <Input type="text" name="nickname" v-model="cache.name" />
+                        <Input type="text" name="nickname" autocomplete="nickname" v-model="name" />
                     </div>
                     <div class="flex items-center gap-2">
                         <div class="w-24">目标：</div>
-                        <Input type="datetime-local" name="goal" v-model="cache.goal" />
+                        <Input type="datetime-local" name="goal" v-model="goal" />
                     </div>
                 </div>
             </CardContent>
