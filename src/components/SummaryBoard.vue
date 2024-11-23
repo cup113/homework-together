@@ -25,9 +25,9 @@ const overallProgress = computed(() => {
   }).flat();
   return Object.fromEntries(users.map(user => {
     const userProgress = shareStore.sharedProgress[user.organizationId].overall[user.id];
-    if (!userProgress) return [user.name, 0];
+    if (!userProgress) return null;
     return [user.name, userProgress[0] / userProgress[1] * 100];
-  }))
+  }).filter(user => user !== null))
 });
 
 const organizations = computed(() => userStore.user?.organizations ?? []);

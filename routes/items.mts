@@ -60,6 +60,12 @@ export class UpdateItemRoute extends RouteBase<true, 401 | 403 | 404> {
             }
             if (this.publicData) {
                 const { id, ...publicData } = this.publicData;
+                if ('organization' in publicData) {
+                    // TODO: change in 2 organizations
+                }
+                if ('range' in publicData) {
+                    // TODO: change in organization range
+                }
                 const publicItem = await this.db.updatePublicItem(id, publicData);
                 this.io().to(publicItem.organization).emit("refresh", authResult.record.id, ["items"]);
             }

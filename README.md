@@ -63,13 +63,13 @@ Do homework together with your friends!
 ### v0.5
 
 - [ ] Organization items management
-- [ ] Transition animation
 - [ ] Update Item: Organization, range, publicEstimate
 
 ### v0.6
 
 - [ ] Responsive design (Combobox, template)
 - [ ] Handle Errors & Check Input
+- [ ] Transition animation
 
 ### v0.7
 

@@ -52,8 +52,9 @@ const avgProgress = computed(() => {
   if (props.progressData === undefined || rankedProgress.value.length === 0) {
     return undefined;
   }
-  const sum = rankedProgress.value.reduce((acc, { progress }) => acc + progress, 0);
-  return sum / rankedProgress.value.length;
+  const sum = rankedProgress.value.reduce((acc, { progress, names }) => acc + progress * names.length, 0)
+  const count = rankedProgress.value.reduce((acc, { names }) => acc + names.length, 0)
+  return sum / count
 })
 
 const maxStyle = computed(() => {
@@ -77,6 +78,14 @@ const currentPercentage = computed(() => {
     return "--%";
   } else {
     return (props.modelValue[0] / (props.max ?? 100) * 100).toFixed(1) + '%';
+  }
+})
+
+const avgPercentage = computed(() => {
+  if (avgProgress.value === undefined) {
+    return "--%";
+  } else {
+    return (avgProgress.value / (props.max ?? 100) * 100).toFixed(1) + '%';
   }
 })
 
@@ -115,11 +124,12 @@ watch(() => props.modelValue, newValue => {
 <template>
   <div class="flex" :class="disabled ? 'gap-0.5' : 'gap-4'">
     <Popover v-if="progressData !== undefined">
-      <PopoverTrigger>
+      <PopoverTrigger aria-label="进度信息">
         <Icon icon="raphael:info" />
       </PopoverTrigger>
       <PopoverContent>
         <div>当前进度: {{ currentPercentage }}</div>
+        <div>平均进度: {{ avgPercentage }}</div>
         <div v-for="r, i in rankedProgress" :key="r.progress">
           <div class="flex gap-2">
             <div class="font-bold text-slate-500">#{{ i + 1 }}</div>
@@ -144,7 +154,7 @@ watch(() => props.modelValue, newValue => {
         <span class="absolute block h-full bg-cyan-500 opacity-70 progress-transition" :style="maxStyle"></span>
       </SliderTrack>
       <SliderThumb v-for="(_, key) in thumbs" :key="key"
-        class="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
+        class="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" aria-label="修改进度" />
     </SliderRoot>
   </div>
 </template>
