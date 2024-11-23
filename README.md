@@ -79,6 +79,7 @@ Do homework together with your friends!
 ### v0.8
 
 - [ ] Add newcomer guiding
+- [ ] Recycle bin
 - [ ] Add pagination & filter in homework list
 
 ### v0.9

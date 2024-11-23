@@ -2,6 +2,7 @@ import Client from 'pocketbase';
 import type { TypedPocketBase, UserItemsResponse, OrganizationsResponse, UsersResponse, UserItemsRecord, PublicItemsResponse, PublicItemsRecord, OrganizationsRecord, UsersRecord } from '../types/pocketbase-types.js';
 import type { Item, RawPublicItem, RawUserItem, RawOrganization } from '../types/contract.js';
 import dayjs from 'dayjs';
+import { invariant } from 'es-toolkit/util';
 
 export class DBService {
     protected pb: TypedPocketBase;
@@ -54,7 +55,7 @@ export class DBService {
         return await this.pb.collection('organizations').create({
             ...organizationData,
             leader: userId,
-        } as OrganizationsRecord)
+        } satisfies OrganizationsRecord)
     }
 
     public async queryOrganization(keyword: string): Promise<OrganizationsResponse[]> {
@@ -77,9 +78,7 @@ export class DBService {
                 estimateMinutes: publicItem.estimateMinutes,
                 confirmed: publicItem.range === "all",
                 progress: 0,
-            } as UserItemsRecord, {
-                requestKey: publicItem.id,
-            });
+            } satisfies UserItemsRecord, { requestKey: publicItem.id });
         }));
         return await this.pb.collection('organizations').getOne(organizationId);
     }
@@ -90,7 +89,7 @@ export class DBService {
             name: this.sanitize(name),
             ...rest,
             leader: userId,
-        } as OrganizationsRecord);
+        } satisfies OrganizationsRecord);
     }
 
     public async listOrganizationItems(organizationId: string): Promise<PublicItemsResponse[]> {
@@ -106,13 +105,13 @@ export class DBService {
         }
         const user = await this.pb.collection('users').getOne(authResult.record.id, {
             expand: "organizations",
-        }) as UsersResponse<{ organizations: OrganizationsResponse[] }>;
+        }) satisfies UsersResponse<{ organizations: OrganizationsResponse[] }>;
         const { expand, ...userRest } = user;
         const organizations = expand?.organizations ?? [];
 
         await this.pb.collection('users').update(user.id, {
             lastCheck: dayjs().toISOString(),
-        } as Required<Pick<UsersRecord, 'lastCheck'>>);
+        } satisfies Required<Pick<UsersRecord, 'lastCheck'>>);
 
         return {
             ...userRest,
@@ -124,7 +123,7 @@ export class DBService {
     public async updateUserActivity(userId: string) {
         return await this.pb.collection('users').update(userId, {
             lastActive: dayjs().toISOString().replace("T", " "),
-        } as Required<Pick<UsersRecord, 'lastActive'>>);
+        } satisfies Required<Pick<UsersRecord, 'lastActive'>>);
     }
 
     public async getUserItems(userId: string, config: {
@@ -142,17 +141,15 @@ export class DBService {
             expand: "publicItem",
             filter,
         });
-        return Promise.all(items.map(async item => {
+        return items.map(item => {
             const { expand, ...rest } = item;
-            if (!expand) {
-                throw new Error("Item is missing publicItem expand");
-            }
+            invariant(expand, "Item is missing publicItem expand");
             const publicItem = expand.publicItem;
             return {
                 ...rest,
                 public: publicItem,
             }
-        }));
+        });
     }
 
     public async createItem(userId: string, publicItem: RawPublicItem, userItem: RawUserItem): Promise<Item> {
@@ -160,34 +157,34 @@ export class DBService {
             ...publicItem,
             author: userId,
         });
-        if (publicItem.organization && publicItem.range !== "private") {
-            const users = await this.pb.collection('users').getFullList({
-                filter: `organizations.id ?= "${this.sanitize(publicItem.organization)}"`
-            });
-            await Promise.all(users.filter(user => user.id !== userId).map(user => {
-                return this.pb.collection('userItems').create({
-                    estimateMinutes: publicItem.estimateMinutes,
-                    publicItem: publicResult.id,
-                    user: user.id,
-                    confirmed: publicItem.range === "all",
-                    progress: 0,
-                } as UserItemsRecord, {
-                    requestKey: user.id,
-                });
-            }));
-        }
         const userResult = await this.pb.collection('userItems').create({
             ...userItem,
             publicItem: publicResult.id,
             user: userId,
             confirmed: true,
-        } as UserItemsRecord, {
-            requestKey: userId,
-        });
+        } satisfies UserItemsRecord, { requestKey: userId });
+        if (publicItem.organization && publicItem.range !== "private") {
+            await this.createFellowItem(userId, publicResult);
+        }
         return {
             ...userResult,
             public: publicResult,
         };
+    }
+
+    public async createFellowItem(userId: string, publicItem: PublicItemsResponse) {
+        const users = await this.pb.collection('users').getFullList({
+            filter: `organizations.id ?= "${this.sanitize(publicItem.organization)}"`
+        });
+        return await Promise.all(users.filter(user => user.id !== userId).map(user => {
+            return this.pb.collection('userItems').create({
+                estimateMinutes: publicItem.estimateMinutes,
+                publicItem: publicItem.id,
+                user: user.id,
+                confirmed: publicItem.range === "all",
+                progress: 0,
+            } satisfies UserItemsRecord, { requestKey: user.id });
+        }));
     }
 
     public async updateUserItem(id: string, data: Partial<UserItemsRecord>): Promise<UserItemsResponse<{ publicItem: PublicItemsResponse }>> {
@@ -197,47 +194,65 @@ export class DBService {
         });
     }
 
-    public async updatePublicItem(id: string, data: Partial<PublicItemsRecord>) {
-        return await this.pb.collection('publicItems').update(id, data, {
-            requestKey: id,
-        });
+    public async updatePublicItem(userId: string, id: string, data: Partial<PublicItemsRecord>) {
+        let result: PublicItemsResponse | null = null;
+        const getResult = async (refresh?: boolean) => {
+            if (result === null || refresh) {
+                const _result = await this.pb.collection('publicItems').update(id, data, { requestKey: userId });
+                result = _result;
+                return _result;
+            }
+            return result;
+        }
+        if ('organization' in data) {
+            const organization = data.organization;
+            if (organization !== (await getResult()).organization) {
+                const originalItem = await this.pb.collection('publicItems').getOne(id, { requestKey: null });
+                const originalOrganization = originalItem.organization;
+                await this.deleteUserItemsOfPublicItem(id, `user.organizations.id:each != "${originalOrganization}"`);
+                if (organization) {
+                    await this.createFellowItem(userId, await getResult(true));
+                }
+            }
+        }
+        if (data.range !== undefined) {
+            if (data.range !== (await getResult()).range) {
+                const range = data.range;
+                if (range === "all") {
+                    // TODO
+                }
+            }
+        }
+        // TODO add emit information
+        return await getResult();
     }
 
     public async deleteUserItem(id: string) {
-        const publicId = (await this.pb.collection('userItems').getOne(id, {
-            requestKey: 'delete-user-item-' + id,
-        })).publicItem;
-        const publicItem = await this.pb.collection('publicItems').getOne(publicId, {
-            requestKey: 'delete-user-item-' + id,
-        });
-        await this.pb.collection('userItems').delete(id, {
-            requestKey: id,
-        });
+        const publicId = (await this.pb.collection('userItems').getOne(id, { requestKey: null })).publicItem;
+        const publicItem = await this.pb.collection('publicItems').getOne(publicId, { requestKey: null });
+        await this.pb.collection('userItems').delete(id, { requestKey: id });
         return {
             organization: publicItem.organization,
         }
     }
 
-    public async deletePublicItem(id: string) {
+    public async deleteUserItemsOfPublicItem(publicItem: string, extraFilter?: string) {
         const userItems = await this.pb.collection('userItems').getFullList({
-            filter: `publicItem.id = "${id}"`,
-            requestKey: id,
+            filter: `publicItem.id = "${publicItem}"` + (extraFilter ? ` && ${extraFilter}` : ""),
         });
         await Promise.all(userItems.map(item => this.deleteUserItem(item.id)));
-        const item = await this.pb.collection('publicItems').getOne(id, {
-            requestKey: id,
-        });
-        await this.pb.collection('publicItems').delete(id, {
-            requestKey: id,
-        });
+    }
+
+    public async deletePublicItem(id: string) {
+        await this.deleteUserItemsOfPublicItem(id);
+        const item = await this.pb.collection('publicItems').getOne(id, { requestKey: id });
+        await this.pb.collection('publicItems').delete(id, { requestKey: id });
         return {
             organization: item.organization
         };
     }
 
     public async listSubjects() {
-        return await this.pb.collection('subjects').getFullList({
-            requestKey: null,
-        });
+        return await this.pb.collection('subjects').getFullList({ requestKey: null });
     }
 }

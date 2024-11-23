@@ -115,7 +115,7 @@ const operationStatus = reactive({
 
 const { data: localProgressRaw } = useOptimisticUpdate({
     source: () => props.item.progress,
-    fromSource: (source) => [source * 100] as [number],
+    fromSource: (source) => [source * 100] satisfies [number],
     trackedValue: (data) => () => data.value[0],
     update: (value) => {
         if (value === 100 && source.value.isWorkedOn) {
@@ -281,6 +281,7 @@ async function toggle_work_on() {
                         <div class="flex gap-1 items-center">
                             <Icon icon="icons8:organization" />
                             <span class="w-12">组织</span>
+                            <!--TODO permission control-->
                             <Input type="text" disabled v-model="organizationName" class="h-7" />
                         </div>
                         <div class="flex gap-1 items-center">

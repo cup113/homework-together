@@ -17,7 +17,7 @@ const userStore = useUserStore();
 
 
 const organizationId = ref(PERSONAL_ORGANIZATION_ID);
-const subject = ref(undefined as string | undefined);
+const subject = ref<string | undefined>(undefined);
 const description = ref('<p></p>');
 const range = ref(PublicItemsRangeOptions.all);
 const estimateMinutes = ref(0);
