@@ -23,8 +23,8 @@ const permittedToRemoveAll = computed(() => {
 
 <template>
   <div class="py-4 px-4 sm:px-8 lg:px-12">
-    <div class="flex justify-center">
-      <section class="border-r border-r-slate-200 pr-2 mr-2 box-content lg:pr-6 lg:mr-6">
+    <div class="flex flex-col justify-center md:flex-row">
+      <section class="md:border-r md:border-r-slate-200 md:pr-2 md:mr-2 box-content lg:pr-6 lg:mr-6">
         <LeaderBoard></LeaderBoard>
       </section>
       <section>
@@ -41,7 +41,7 @@ const permittedToRemoveAll = computed(() => {
           <div v-if="itemsStore.itemsLoading">
             <Skeleton class="w-full h-24"></Skeleton>
           </div>
-          <div class="mt-8 flex justify-between gap-4">
+          <div class="mt-8 flex flex-col md:flex-row justify-between gap-4">
             <Button @click="itemsStore.deleteOutdated('public')" variant="destructive" class="bg-[#edcbc0] hover:bg-[#f0a381]"
               v-if="permittedToRemoveAll">清除过期作业（所有人）</Button>
             <Button @click="itemsStore.deleteOutdated('user')" variant="destructive" class="bg-[#edcbc0] hover:bg-[#f0a381]">清除过期作业（仅个人）</Button>

@@ -94,7 +94,7 @@ const modelValueText = computed({
 </script>
 
 <template>
-    <div class="flex items-center px-2 py-2 border-b border-slate-200 rounded-lg gap-3 w-48">
+    <div class="flex items-center px-2 py-2 border-b border-slate-200 rounded-lg gap-3 w-full md:w-48">
         <div :class="rankClass">{{ rankString }}</div>
         <div class="flex flex-col items-center grow">
             <div class="w-full">

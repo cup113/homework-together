@@ -15,6 +15,7 @@ import { Icon } from '@iconify/vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import router from '@/router';
 
@@ -35,11 +36,7 @@ const source = computed(() => {
         subject: itemsStore.subjects.find(s => s.id === props.item.public.subject),
         subjectColor: itemsStore.subjectColors.get(props.item.public.subject),
         deadline: props.item.public.deadline ? dayjs(props.item.public.deadline).format("MM/DD HH:mm") : undefined,
-        range: ({
-            all: '全体',
-            some: '部分',
-            private: '个人',
-        }[props.item.public.range]),
+        range: props.item.public.range,
         isWorkedOn: userStore.user?.workingOn === props.item.publicItem,
         snapPoints: props.item.public.snaps ? props.item.public.snaps.split(',').map(s => parseInt(s)) : undefined,
     };
@@ -114,7 +111,6 @@ const workOnColor = computed(() => {
 
 const operationStatus = reactive({
     editing: false,
-    showingMore: false,
 });
 
 const { data: localProgressRaw } = useOptimisticUpdate({
@@ -246,16 +242,11 @@ async function toggle_work_on() {
             <div class="flex-grow">
                 <MiniEditor v-model="description" placeholder="请输入公开内容/描述"></MiniEditor>
             </div>
-            <div @click="operationStatus.editing = !operationStatus.editing"
-                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1"
-                :class="{ 'bg-blue-300': operationStatus.editing }">
+            <Button variant="ghost" @click="operationStatus.editing = !operationStatus.editing"
+                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1 h-6"
+                :class="{ 'bg-blue-300': operationStatus.editing }" aria-label="编辑项目">
                 <Icon icon="tabler:edit" />
-            </div>
-            <div @click="operationStatus.showingMore = !operationStatus.showingMore"
-                class="hover:bg-blue-100 active:bg-blue-200 rounded-md p-1"
-                :class="{ 'bg-blue-300': operationStatus.showingMore }">
-                <Icon icon="weui:more-filled" class="w-6 h-6" />
-            </div>
+            </Button>
         </div>
         <div class="flex w-full items-center my-1" v-if="item.confirmed">
             <div class="text-xs inline-block text-white py-0.5 rounded-full font-mono relative w-8 text-center mr-2"
@@ -268,7 +259,7 @@ async function toggle_work_on() {
             <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">
                 {{ localProgress.toFixed(0) }}% -{{ timeStore.format_regular(etaMinutes) }}</div>
             <div>
-                <Button variant="ghost" class="h-4 p-0 hover:bg-slate-200" @click="toggle_work_on">
+                <Button variant="ghost" class="h-4 p-0 hover:bg-slate-200" @click="toggle_work_on" aria-label="开始/结束工作">
                     <Icon icon="ph:record-bold" :color="workOnColor" />
                 </Button>
             </div>
@@ -288,60 +279,62 @@ async function toggle_work_on() {
                     <div class="text-lg font-bold text-center">编辑项目</div>
                     <div class="flex flex-col gap-2">
                         <div class="flex gap-1 items-center">
-                            <span>截止日期改为</span>
-                            <Input type="datetime-local" v-model="deadline" class="w-48 h-7"></Input>
+                            <Icon icon="icons8:organization" />
+                            <span class="w-12">组织</span>
+                            <Input type="text" disabled v-model="organizationName" class="h-7" />
                         </div>
                         <div class="flex gap-1 items-center">
-                            <span>个人预估时间改为</span>
-                            <Input type="number" min="0" step="1" v-model="userEstimate" class="w-20 h-7"></Input>
-                            <span>分钟</span>
+                            <Icon icon="tabler:tag-filled" />
+                            <span class="w-12">范围</span>
+                            <Select disabled v-model="source.range">
+                                <SelectTrigger class="h-7">
+                                    <SelectValue></SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">全体</SelectItem>
+                                    <SelectItem value="some">部分</SelectItem>
+                                    <SelectItem value="private">个人</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
-                    </div>
-                </div>
-            </CollapsibleContent>
-        </Collapsible>
-        <Collapsible :open="operationStatus.showingMore">
-            <CollapsibleContent>
-                <div class="p-2 flex flex-col gap-2">
-                    <div class="flex gap-2 items-center">
-                        <Badge class="flex-grow">
-                            <div class="flex items-center gap-1">
-                                <Icon icon="icons8:organization" />{{ organizationName }}
+                        <div class="flex gap-1 items-center">
+                            <Icon icon="tabler:calendar-event" />
+                            <span class="w-12">截至</span>
+                            <Input type="datetime-local" v-model="deadline" class="h-7"></Input>
+                        </div>
+                        <div class="flex gap-1 items-center">
+                            <Icon icon="hugeicons:estimate-02" />
+                            <span>预估时间</span>
+                            <div class="flex flex-col gap-1">
+                                <div class="flex gap-1 items-center">
+                                    <Icon icon="ant-design:global-outlined" />
+                                    <span class="w-12">公共</span>
+                                    <Input type="number" min="0" step="1" v-model="userEstimate" class="w-16 h-7"
+                                        disabled></Input>
+                                    <span>分钟</span>
+                                </div>
+                                <div class="flex gap-1 items-center">
+                                    <Icon icon="ant-design:user-outlined" />
+                                    <span class="w-12">个人</span>
+                                    <Input type="number" min="0" step="1" v-model="userEstimate"
+                                        class="w-16 h-7"></Input>
+                                    <span>分钟</span>
+                                </div>
                             </div>
-                        </Badge>
-                        <Badge class="flex-grow">
-                            <div class="flex items-center gap-1">
-                                <Icon icon="tabler:tag-filled"></Icon>{{ source.range }}
-                            </div>
-                        </Badge>
-                    </div>
-                    <div class="flex gap-2">
-                        <Badge variant="secondary" class="text-sm flex-grow">
-                            <div class="flex items-center gap-1">
-                                <Icon icon="tabler:clock" />
-                                {{ source.deadline }}
-                            </div>
-                        </Badge>
-                        <Badge variant="secondary" class="flex-grow">
-                            <div class="flex items-center gap-1">
-                                <Icon icon="hugeicons:estimate-02"></Icon>
-                                <div class="text-base">{{ timeStore.format_regular(props.item.estimateMinutes) }}</div>
-                                <div class="text-xs">{{ timeStore.format_regular(item.public.estimateMinutes) }}</div>
-                            </div>
-                        </Badge>
-                    </div>
-                    <div class="flex gap-2">
-                        <Button variant="outline" class="font-bold flex-grow">
-                            <div class="text-red-500 flex items-center gap-1" @click="deleteUserItem">
-                                <Icon icon="material-symbols:delete-outline" />删除（仅个人）
-                            </div>
-                        </Button>
-                        <Button variant="outline" class="font-bold flex-grow">
-                            <div v-if="permittedPublic" class="text-red-500 flex items-center gap-1"
-                                @click="itemsStore.deleteItems([item.publicItem], 'public', false)">
-                                <Icon icon="material-symbols:delete-outline" />删除（全体）
-                            </div>
-                        </Button>
+                        </div>
+                        <div class="flex gap-2">
+                            <Button variant="outline" class="font-bold flex-grow">
+                                <div class="text-red-500 flex items-center gap-1" @click="deleteUserItem">
+                                    <Icon icon="material-symbols:delete-outline" />删除（仅个人）
+                                </div>
+                            </Button>
+                            <Button variant="outline" class="font-bold flex-grow">
+                                <div v-if="permittedPublic" class="text-red-500 flex items-center gap-1"
+                                    @click="itemsStore.deleteItems([item.publicItem], 'public', false)">
+                                    <Icon icon="material-symbols:delete-outline" />删除（全体）
+                                </div>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </CollapsibleContent>
