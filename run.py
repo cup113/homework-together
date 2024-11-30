@@ -45,7 +45,7 @@ def run_pocket_base():
     all_wait(
         general_popen(
             pnpx,
-            "pocketbase-typegen",
+            "pocketbase-typegen@1.2",
             "--db",
             ROOT / "pb_data" / "data.db",
             "--out",

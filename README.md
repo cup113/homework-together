@@ -64,6 +64,7 @@ Do homework together with your friends!
 
 - [ ] Organization items management
 - [ ] Update Item: Organization, range, publicEstimate
+- [ ] Network sequence optimization
 
 ### v0.6
 
