@@ -177,6 +177,7 @@ export class DBService {
             filter: `organizations.id ?= "${this.sanitize(publicItem.organization)}"`
         });
         return await Promise.all(users.filter(user => user.id !== userId).map(user => {
+            // TODO make sure user hasn't had this item before
             return this.pb.collection('userItems').create({
                 estimateMinutes: publicItem.estimateMinutes,
                 publicItem: publicItem.id,
@@ -195,36 +196,70 @@ export class DBService {
     }
 
     public async updatePublicItem(userId: string, id: string, data: Partial<PublicItemsRecord>) {
-        let result: PublicItemsResponse | null = null;
-        const getResult = async (refresh?: boolean) => {
-            if (result === null || refresh) {
-                const _result = await this.pb.collection('publicItems').update(id, data, { requestKey: userId });
-                result = _result;
-                return _result;
+        const originalItem = await this.pb.collection('publicItems').getOne(id, { requestKey: null });
+        let newItem: PublicItemsResponse | null = null;
+        const getNewItem = async () => {
+            if (!newItem) {
+                const _newItem = await this.pb.collection('publicItems').update(id, data, { requestKey: id });
+                newItem = _newItem;
+                return newItem;
             }
-            return result;
+            return newItem;
         }
+
         if ('organization' in data) {
+            // TODO permission check
             const organization = data.organization;
-            if (organization !== (await getResult()).organization) {
-                const originalItem = await this.pb.collection('publicItems').getOne(id, { requestKey: null });
+            if (organization !== originalItem.organization) {
                 const originalOrganization = originalItem.organization;
                 await this.deleteUserItemsOfPublicItem(id, `user.organizations.id:each != "${originalOrganization}"`);
                 if (organization) {
-                    await this.createFellowItem(userId, await getResult(true));
+                    await this.createFellowItem(userId, await getNewItem());
                 }
             }
         }
         if (data.range !== undefined) {
-            if (data.range !== (await getResult()).range) {
-                const range = data.range;
-                if (range === "all") {
-                    // TODO
+            const create_fellow = async () => { this.createFellowItem(userId, await getNewItem()); };
+            const delete_fellow = async () => { this.deleteUserItemsOfPublicItem(id, `user.id != "${userId}"`); };
+            const confirm_fellow = async () => {
+                const fellowItems = await this.pb.collection('userItems').getFullList({
+                    filter: `publicItem.id = "${id}" && user.id != "${userId}"`,
+                });
+                await Promise.all(fellowItems.map(item => this.pb.collection('userItems').update(
+                    item.id, { confirmed: true }, { requestKey: item.id })));
+            };
+            const un_confirm_fellow = async () => {
+                const fellowItems = await this.pb.collection('userItems').getFullList({
+                    filter: `publicItem.id = "${id}" && user.id != "${userId}" && progress = 0`,
+                });
+                await Promise.all(fellowItems.map(item => this.pb.collection('userItems').update(
+                    item.id, { confirmed: false }, { requestKey: item.id })));
+            };
+
+            const APPROACH_MAP = {
+                'private': {
+                    'private': null,
+                    'some': create_fellow,
+                    'all': create_fellow,
+                },
+                'some': {
+                    'private': delete_fellow,
+                    'some': null,
+                    'all': confirm_fellow,
+                },
+                'all': {
+                    'private': delete_fellow,
+                    'some': un_confirm_fellow,
+                    'all': null,
                 }
+            };
+            const approach = APPROACH_MAP[(await getNewItem()).range][originalItem.range];
+            if (approach) {
+                await approach();
             }
         }
         // TODO add emit information
-        return await getResult();
+        return await getNewItem();
     }
 
     public async deleteUserItem(id: string) {
