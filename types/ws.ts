@@ -12,6 +12,8 @@ export interface ProgressChange {
 
 export interface ServerToClientEvents {
     info(version: string): void;
+    usersJoined(userIds: string[]): void;
+    usersLeft(userIds: string[]): void;
     refresh(except: string, sources: ('items' | 'share')[]): void;
     progressUpdated(data: ProgressChange): void;
     userUpdated(user: Partial<UsersResponse> & Pick<UsersResponse, 'id'>): void;

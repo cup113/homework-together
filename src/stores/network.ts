@@ -48,6 +48,8 @@ export const useNetworkStore = defineStore("network", () => {
             } else if (reason === 'ping timeout' || reason === 'transport close' || reason === 'transport error') {
                 console.log(`Reason: ${reason}`);
             }
+            const userStore = useUserStore();
+            userStore.onlineUserIds.splice(0, userStore.onlineUserIds.length);
         });
 
         socket.on('connect_error', error => {
@@ -102,7 +104,25 @@ export const useNetworkStore = defineStore("network", () => {
                     }
                 }
             });
-        })
+        });
+
+        socket.on('usersJoined', userIds => {
+            const userStore = useUserStore();
+            userIds.forEach(userId => {
+                userStore.onlineUserIds.push(userId);
+            });
+        });
+
+        socket.on('usersLeft', userIds => {
+            const userStore = useUserStore();
+            userIds.forEach(userId => {
+                const index = userStore.onlineUserIds.indexOf(userId);
+                if (index === -1) {
+                    return;
+                }
+                userStore.onlineUserIds.splice(index, 1);
+            });
+        });
     }
 
     return {

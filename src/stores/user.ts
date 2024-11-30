@@ -18,6 +18,7 @@ export const useUserStore = defineStore('user', () => {
   const user = ref<UserInfo | undefined>();
   const organizations = ref(new Array<OrganizationsResponse>());
   const checked = ref(false);
+  const onlineUserIds = ref(new Array<string>());
 
   function sha256(str: string): string {
     const hash = new Sha256();
@@ -205,6 +206,7 @@ export const useUserStore = defineStore('user', () => {
     user,
     userBasic,
     organizations,
+    onlineUserIds,
     check,
     onChecked,
     logout,

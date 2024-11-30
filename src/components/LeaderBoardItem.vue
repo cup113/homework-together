@@ -20,6 +20,8 @@ const itemsStore = useItemsStore();
 const timeStore = useTimeStore();
 const userStore = useUserStore();
 
+const isOnline = computed(() => userStore.onlineUserIds.some(id => id === props.user.id))
+
 const rankString = computed(() => {
     const rank = props.rank.toString().padStart(2, '0');
     return `#${rank}`;
@@ -98,9 +100,11 @@ const modelValueText = computed({
         <div :class="rankClass">{{ rankString }}</div>
         <div class="flex flex-col items-center grow">
             <div class="w-full">
-                <ProgressSlider disabled v-model="modelValue" :min="0" :max="100" :animation="animation"></ProgressSlider>
+                <ProgressSlider disabled v-model="modelValue" :min="0" :max="100" :animation="animation">
+                </ProgressSlider>
             </div>
-            <div class="flex items-center justify-between w-full">
+            <div class="flex items-center w-full">
+                <div class="w-2 h-2 rounded-full" :class="isOnline ? 'bg-green-700' : 'bg-slate-700'"></div>
                 <Popover>
                     <PopoverTrigger>
                         <span class="hover:bg-slate-200 active:bg-slate-300 px-1 rounded-lg">{{ name }}</span>
@@ -113,7 +117,7 @@ const modelValueText = computed({
                         </div>
                     </PopoverContent>
                 </Popover>
-                <span class="text-slate-500 text-sm">{{ percentage }}%</span>
+                <span class="text-slate-500 text-sm ml-auto">{{ percentage }}%</span>
             </div>
         </div>
     </div>
