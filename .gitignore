@@ -34,3 +34,4 @@ coverage
 # database files
 *.exe
 pb_data
+instances/vite-stats.html
