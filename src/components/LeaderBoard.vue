@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useShareStore } from '@/stores/share';
 import LeaderBoardItem from '@/components/LeaderBoardItem.vue';
+import { animation } from '@/lib/animation';
 import type { OrganizationsResponse } from 'types/pocketbase-types';
 
 const props = defineProps<{
@@ -30,7 +31,9 @@ const rankedUsers = computed(() => {
 <template>
     <div class="border-t border-slate-300 border-solid">
         <h3 class="font-bold text-center mb-2 mt-1">{{ organization.name }}</h3>
-        <LeaderBoardItem v-for="user in rankedUsers" :key="user.id" :name="user.name" :rank="user.rank" :user="user">
-        </LeaderBoardItem>
+        <TransitionGroup tag="div" :css="false" @before-enter="animation.onBeforeEnter" @enter="animation.onEnter" @leave="animation.onLeave">
+            <LeaderBoardItem v-for="user, i in rankedUsers" :key="user.id" :name="user.name" :rank="user.rank" :user="user" :data-index="i">
+            </LeaderBoardItem>
+        </TransitionGroup>
     </div>
 </template>

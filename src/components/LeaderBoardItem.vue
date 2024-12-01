@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { useItemsStore } from '@/stores/items';
 import { useTimeStore } from '@/stores/time';
 import { useUserStore } from '@/stores/user';
+import { useTransitionedNumber } from '@/lib/animation';
 
 import type { UsersResponse } from '../../types/pocketbase-types';
 import ProgressSlider from './ProgressSlider.vue';
@@ -38,7 +39,7 @@ const rankClass = computed(() => {
     return ['text-slate-600'];
 });
 
-const percentage = computed(() => (props.user.done / props.user.total * 100).toFixed(2));
+const transitionedPercentage = useTransitionedNumber(() => props.user.done / props.user.total, (num) => (num * 100).toFixed(2));
 
 const minutesSinceLastActive = computed(() => {
     if (!props.user.lastActive) {
@@ -117,7 +118,7 @@ const modelValueText = computed({
                         </div>
                     </PopoverContent>
                 </Popover>
-                <span class="text-slate-500 text-sm ml-auto">{{ percentage }}%</span>
+                <span class="text-slate-500 text-sm ml-auto">{{ transitionedPercentage }}%</span>
             </div>
         </div>
     </div>

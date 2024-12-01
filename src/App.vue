@@ -13,8 +13,7 @@ const networkStore = useNetworkStore();
       <hr>
     </header>
     <main class="flex-grow">
-      <RouterView>
-      </RouterView>
+      <RouterView></RouterView>
     </main>
     <footer class="bg-slate-100 text-slate-700 text-center text-sm mt-8 py-4">
       <div class="flex flex-col md:flex-row gap-2 md:gap-8 justify-center">
@@ -26,5 +25,3 @@ const networkStore = useNetworkStore();
     </footer>
   </div>
 </template>
-
-<style></style>

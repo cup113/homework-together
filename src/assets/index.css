@@ -96,6 +96,6 @@
 
 @layer components {
   .progress-transition {
-    transition: left var(--transition-duration, 1s) ease-in-out, right var(--transition-duration, 1s) ease-in-out;
+    transition: left var(--transition-duration, 1s) ease-out, right var(--transition-duration, 1s) ease-out;
   }
 }

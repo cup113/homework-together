@@ -7,6 +7,7 @@ import { useUserStore } from '@/stores/user';
 import { useShareStore } from '@/stores/share';
 import { useTimeStore } from '@/stores/time';
 import { useOptimisticUpdate } from '@/lib/optimistic';
+import { useTransitionedNumber } from '@/lib/animation';
 
 import MiniEditor from '@/components/MiniEditor.vue';
 import ProgressSlider from '@/components/ProgressSlider.vue';
@@ -191,7 +192,10 @@ const organizationName = computed(() => {
     return organization.name;
 });
 
-const etaMinutes = computed(() => (100 - localProgress.value) * props.item.estimateMinutes / 100);
+const transitionedEtaMinutes = useTransitionedNumber(
+    () => (1 - props.item.progress) * props.item.estimateMinutes,
+    num => timeStore.format_regular(num),
+)
 
 const permittedPublic = computed(() => {
     if (userStore.userBasic.id === props.item.public.author) {
@@ -257,7 +261,7 @@ async function toggle_work_on() {
                 </ProgressSlider>
             </div>
             <div class="text-xs text-slate-700 text-center font-mono font-bold w-24">
-                {{ localProgress.toFixed(0) }}% -{{ timeStore.format_regular(etaMinutes) }}</div>
+                {{ localProgress.toFixed(0) }}% -{{ transitionedEtaMinutes }}</div>
             <div>
                 <Button variant="ghost" class="h-4 p-0 hover:bg-slate-200" @click="toggle_work_on" aria-label="开始/结束工作">
                     <Icon icon="ph:record-bold" :color="workOnColor" />

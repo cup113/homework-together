@@ -71,6 +71,9 @@ importers:
       express-async-errors:
         specifier: ^3.1.1
         version: 3.1.1(express@4.21.0)
+      gsap:
+        specifier: ^3.12.5
+        version: 3.12.5
       http-errors:
         specifier: ^2.0.0
         version: 2.0.0
@@ -1642,6 +1645,9 @@ packages:
 
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
+
+  gsap@3.12.5:
+    resolution: {integrity: sha512-srBfnk4n+Oe/ZnMIOXt3gT605BX9x5+rh/prT2F1SsNJsU1XuMiP0E2aptW481OnonOGACZWBqseH5Z7csHxhQ==}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -4347,6 +4353,8 @@ snapshots:
       get-intrinsic: 1.2.4
 
   graphemer@1.4.0: {}
+
+  gsap@3.12.5: {}
 
   has-flag@4.0.0: {}
 

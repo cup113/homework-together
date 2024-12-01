@@ -4,6 +4,7 @@ import { useItemsStore } from '@/stores/items';
 import { useTimeStore } from '@/stores/time';
 import { useShareStore } from '@/stores/share';
 import { useUserStore } from '@/stores/user';
+import { useTransitionedNumber } from '@/lib/animation';
 
 import ProgressSlider from '@/components/ProgressSlider.vue';
 import type { Subject } from '@/../types/contract';
@@ -58,6 +59,16 @@ const doneValue = computed({
     get() { return [props.subject.done] },
     set() { }
 }); // disabled slider v-model
+
+const transitionedDone = useTransitionedNumber(
+    () => props.subject.done,
+    num => timeStore.format_regular(num),
+);
+
+const transitionedTotal = useTransitionedNumber(
+    () => props.subject.total,
+    num => timeStore.format_regular(num),
+);
 </script>
 
 <template>
@@ -66,8 +77,7 @@ const doneValue = computed({
         <div>{{ subject.name }}</div>
         <div class="grow">
             <ProgressSlider disabled v-model="doneValue" :max="subject.total" :animation="animation" :progress-data="sharedProgress"></ProgressSlider>
-            <div class="ml-4 text-slate-500">{{ timeStore.format_regular(subject.done) }} / {{
-                timeStore.format_regular(subject.total) }}</div>
+            <div class="ml-4 text-slate-500">{{ transitionedDone }} / {{ transitionedTotal }}</div>
         </div>
     </div>
 </template>

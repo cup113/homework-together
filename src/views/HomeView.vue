@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+import { animation } from '@/lib/animation';
 import { useItemsStore } from '@/stores/items';
 import { useUserStore } from '@/stores/user';
 
@@ -37,7 +38,9 @@ const permittedToRemoveAll = computed(() => {
               <ItemAdd></ItemAdd>
             </CollapsibleContent>
           </Collapsible>
-          <ItemDisplay v-for="item, i in itemsStore.itemsSorted" :key="item.id" :item="item" :index="i"></ItemDisplay>
+          <TransitionGroup tag="div" :css="false" @before-enter="animation.onBeforeEnter" @enter="animation.onEnter" @leave="animation.onLeave">
+            <ItemDisplay v-for="item, i in itemsStore.itemsSorted" :key="item.id" :item="item" :index="i" :data-index="i"></ItemDisplay>
+          </TransitionGroup>
           <div v-if="itemsStore.itemsLoading">
             <Skeleton class="w-full h-24"></Skeleton>
           </div>

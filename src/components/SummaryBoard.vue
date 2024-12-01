@@ -5,6 +5,7 @@ import { useShareStore } from '@/stores/share';
 import { useItemsStore } from '@/stores/items';
 import { useTimeStore } from '@/stores/time';
 import { useUserStore } from '@/stores/user';
+import { animation, useTransitionedNumber } from '@/lib/animation';
 
 import LeaderBoard from '@/components/LeaderBoard.vue';
 import ProgressSlider from '@/components/ProgressSlider.vue';
@@ -31,6 +32,16 @@ const overallProgress = computed(() => {
 });
 
 const organizations = computed(() => userStore.user?.organizations ?? []);
+
+const transitionedDone = useTransitionedNumber(
+  () => itemsStore.summary.done,
+  (num) => timeStore.format_regular(num),
+);
+
+const transitionedTotal = useTransitionedNumber(
+  () => itemsStore.summary.total,
+  (num) => timeStore.format_regular(num),
+);
 </script>
 
 <template>
@@ -46,12 +57,13 @@ const organizations = computed(() => userStore.user?.organizations ?? []);
         <div class="grow">
           <ProgressSlider disabled v-model="overallModel" :max="100" :progress-data="overallProgress">
           </ProgressSlider>
-          <div class="text-slate-500 ml-4">{{ timeStore.format_regular(itemsStore.summary.done) }} / {{
-            timeStore.format_regular(itemsStore.summary.total) }}</div>
+          <div class="text-slate-500 ml-4">{{ transitionedDone }} / {{ transitionedTotal }}</div>
         </div>
       </div>
-      <SubjectDisplay v-for="subject in itemsStore.subjectsSummary" :key="subject[0]" :subject="subject[1]">
-      </SubjectDisplay>
+      <TransitionGroup :css="false" tag="div" @before-enter="animation.onBeforeEnter" @enter="animation.onEnter" @leave="animation.onLeave">
+        <SubjectDisplay v-for="subject, i in itemsStore.subjectsSummary" :key="subject[0]" :subject="subject[1]" :data-index="i">
+        </SubjectDisplay>
+      </TransitionGroup>
     </div>
   </div>
 </template>
