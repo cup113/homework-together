@@ -4,18 +4,18 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwind from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
-import { visualizer } from 'rollup-plugin-visualizer'
+// import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    visualizer({
-      gzipSize: true,
-      brotliSize: true,
-      emitFile: false,
-      filename: 'instances/vite-stats.html',
-    }),
+    // visualizer({
+    //   gzipSize: true,
+    //   brotliSize: true,
+    //   emitFile: false,
+    //   filename: 'instances/vite-stats.html',
+    // }),
   ],
   css: {
     postcss: {
