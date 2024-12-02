@@ -184,7 +184,7 @@ export class DBService {
                 user: user.id,
                 confirmed: publicItem.range === "all",
                 progress: 0,
-            } satisfies UserItemsRecord, { requestKey: user.id });
+            } satisfies UserItemsRecord, { requestKey: publicItem.id + user.id });
         }));
     }
 
@@ -274,6 +274,7 @@ export class DBService {
     public async deleteUserItemsOfPublicItem(publicItem: string, extraFilter?: string) {
         const userItems = await this.pb.collection('userItems').getFullList({
             filter: `publicItem.id = "${publicItem}"` + (extraFilter ? ` && ${extraFilter}` : ""),
+            requestKey: null,
         });
         await Promise.all(userItems.map(item => this.deleteUserItem(item.id)));
     }

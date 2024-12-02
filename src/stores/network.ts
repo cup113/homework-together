@@ -5,13 +5,14 @@ import { initQueryClient } from '@ts-rest/vue-query'
 import contract from '@/../types/contract'
 import type { SocketClient } from "@/../types/ws";
 
-import { nextTick } from "vue";
+import { ref, nextTick } from "vue";
 import { useUserStore } from "./user";
 import { useShareStore } from "./share";
 import { useItemsStore } from "./items";
 
 export const useNetworkStore = defineStore("network", () => {
     const buildVersion = useLocalStorage('HT_BUILD_VERSION', 'unknown');
+    const receivedInfo = ref(false);
     const client = initQueryClient(contract, {
         baseUrl: location.origin,
         baseHeaders: {
@@ -79,8 +80,11 @@ export const useNetworkStore = defineStore("network", () => {
         socket.on('info', version => {
             if (buildVersion.value === 'unknown' || version !== buildVersion.value) {
                 buildVersion.value = version;
-                setTimeout(() => location.reload(), 600);
+                if (receivedInfo.value) {
+                    setTimeout(() => location.reload(), 600);
+                }
             }
+            receivedInfo.value = true;
         });
 
         socket.on('progressUpdated', data => {
