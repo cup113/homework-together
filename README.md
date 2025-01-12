@@ -1,8 +1,14 @@
 # Homework Together
 
-Do homework together with your friends!
+和你的同学/朋友一起写作业吧！
 
-## Roadmap
+> **当前处于不稳定版本，随时可能有破坏性改动和短于2分钟的停机更新，请理解！**
+
+## 使用说明 / Usage
+
+<!--TODO-->
+
+## 路线规划 / Roadmap
 
 ### Phase 1: Demo
 

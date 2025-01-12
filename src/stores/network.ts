@@ -25,11 +25,23 @@ export const useNetworkStore = defineStore("network", () => {
     });
 
     let socket: SocketClient | null = null;
+    let disconnected = false;
 
     nextTick(() => {
         const userStore = useUserStore();
         userStore.onChecked(initSocket);
     });
+
+    const refreshFuncMap = {
+        items() {
+            const itemsStore = useItemsStore();
+            itemsStore.refreshItems();
+        },
+        share() {
+            const shareStore = useShareStore();
+            shareStore.refreshProgress();
+        },
+    } satisfies Required<Record<'items' | 'share', () => void>>;
 
     function initSocket() {
         socket = io({
@@ -40,6 +52,11 @@ export const useNetworkStore = defineStore("network", () => {
 
         socket.on('connect', () => {
             console.log('Connected to server');
+            if (disconnected) {
+                refreshFuncMap.items();
+                refreshFuncMap.share();
+                disconnected = false;
+            }
         });
 
         socket.on('disconnect', (reason) => {
@@ -49,6 +66,7 @@ export const useNetworkStore = defineStore("network", () => {
             } else if (reason === 'ping timeout' || reason === 'transport close' || reason === 'transport error') {
                 console.log(`Reason: ${reason}`);
             }
+            disconnected = true;
             const userStore = useUserStore();
             userStore.onlineUserIds.splice(0, userStore.onlineUserIds.length);
         });
@@ -63,17 +81,7 @@ export const useNetworkStore = defineStore("network", () => {
                 return;
             }
             sources.forEach(source => {
-                const funcMap = {
-                    items() {
-                        const itemsStore = useItemsStore();
-                        itemsStore.refreshItems();
-                    },
-                    share() {
-                        const shareStore = useShareStore();
-                        shareStore.refreshProgress();
-                    },
-                } satisfies Required<Record<typeof source, () => void>>;
-                funcMap[source]();
+                refreshFuncMap[source]();
             })
         });
 
